@@ -1,8 +1,13 @@
 const { randomUUID } = require('node:crypto')
 const bcrypt = require('bcryptjs');
-const { db } = require("../firebase");
 
+//Firebase
+const { db } = require("../firebase");
 const usersCollection = db.collection("users");
+
+// Faturapi
+const Facturapi = require('facturapi').default;
+const facturapi = new Facturapi('sk_user_anXyMVwxYB2p6dZP6L4PPAKT5qpOGRPqzDEQ8gKjAv'); //sk_user_anXyMVwxYB2p6dZP6L4PPAKT5qpOGRPqzDEQ8gKjAv
 
 async function getAllUsers(){
     const users = await usersCollection.get();
@@ -25,20 +30,45 @@ async function findByEmail(email){
     return { id: doc.id, ...doc.data() };
 }
 
-async function createUser({email, password, name, address}) {
+//Facturapi - Crear cliente
+async function createClient(name, tax_id, email, address) {
+    try {
+        console.log("Creando cliente en Facturapi...");
+        const customer = await facturapi.customers.create({
+            legal_name: name,
+            tax_id: tax_id,
+            email: email,
+            address: {
+                zip: '63446',
+                street: address,
+            },
+            tax_system: '601',
+        });
+        console.log('Cliente creado:', cliente);
+        return customer.id
+        } catch (error) {
+        console.error('Error al crear el cliente:', error);
+    }
+}
+       
+async function createUser({email, tax_id, password, name, address}) {
     const exiting = await findByEmail(email);
     if(exiting) return null;
+
     const hashedPass = await bcrypt.hashSync(password, 10); //await hace que la función espere a complir la sentencia que engloba
     const user = {
         id: randomUUID(),
+        id_client: await createClient(name, tax_id, email, address), //dar de alta y obtener ID de facturapi para cliente
+        tax_id: tax_id,
         email:email,
         password:hashedPass,
         name:name,
         role:'user',
         address:address
     };
+
     await usersCollection.doc(user.id).set(user);
-    return{ id:user.id, email: user.email, name:user.name};
+    return{ id:user.id, id_client:user.id_client, email: user.email, tax_id:tax_id, name:user.name};
 }
 
 async function editUser(id, {email, password, name, address}){
