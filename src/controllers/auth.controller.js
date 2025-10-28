@@ -5,11 +5,11 @@ const User = require('../models/user.model');
 const JWT_SECRET = process.env.JWT_SECRET || "1234";
 
 async function register(req, res) {
-    const { email, password, name, address} = req.body;
+    const { email, password, name, address, tax_id} = req.body;
     if (!email || !password || !name || !address) {
         return res.status(400).json({message:"Los campos no pueden estar vacios"});
     }
-    const created = await User.createUser({ email, password , name, address});
+    const created = await User.createUser({ email, password , name, address, tax_id});
     if(!created) {
         return res.status(409).json({message: "Este usuario ya existe"})
     }

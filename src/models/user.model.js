@@ -32,6 +32,7 @@ async function findByEmail(email){
 
 //Facturapi - Crear cliente
 async function createClient(name, tax_id, email, address) {
+    console.log("tax_id: ",tax_id);
     try {
         console.log("Creando cliente en Facturapi...");
         const customer = await facturapi.customers.create({
@@ -44,7 +45,7 @@ async function createClient(name, tax_id, email, address) {
             },
             tax_system: '601',
         });
-        console.log('Cliente creado:', cliente);
+        console.log('Cliente creado:', customer);
         return customer.id
         } catch (error) {
         console.error('Error al crear el cliente:', error);
