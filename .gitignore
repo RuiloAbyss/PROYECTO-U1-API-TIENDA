@@ -1,0 +1,54 @@
+# Node dependencies
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Build output
+dist/
+build/
+coverage/
+
+# Environment files
+.env
+.env.*
+.env.local
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# IDEs
+.idea/
+
+# OS generated files
+Thumbs.db
+
+# Package managers
+.pnp/
+.pnp.js
+
+# Misc
+.cache/
+*.tgz
+*.zip
+
+# Optional: ignore local npm debug and report files
+report.*
+
+# Keep lockfiles (recommended) - remove the following lines if you want to ignore them
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
