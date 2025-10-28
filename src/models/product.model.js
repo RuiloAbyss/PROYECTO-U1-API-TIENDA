@@ -1,32 +1,37 @@
 const { randomUUID } = require('node:crypto')
 
-let products = [];
+const { db } = require("../firebase");
 
-function findAll(filters = {}){
-    let filteredProducts = products;
-    
-    if (filters.category) {// Filtrado por categoría 
-        const categoryFilter = filters.category.toLowerCase();
-        filteredProducts = filteredProducts.filter(p => 
-            p.category && p.category.toLowerCase() === categoryFilter
-        );
+const productsCollection = db.collection("products");
+
+async function findAll(filters = {}) {
+    let query = productsCollection;
+
+    if (filters.category) {
+        query = query.where('category', '==', filters.category);
     }
 
-    if (filters.brand) {// Filtrado por marca
-        const brandFilter = filters.brand.toLowerCase();
-        filteredProducts = filteredProducts.filter(p => 
-            p.brand && p.brand.toLowerCase() === brandFilter
-        );
+    if (filters.brand) {
+        query = query.where('brand', '==', filters.brand);
     }
 
-    return filteredProducts;
+    const snapshot = await query.get();
+    const products = [];
+    snapshot.forEach(doc => {
+        products.push({ id: doc.id, ...doc.data() });
+    });
+    return products;
 }
 
-function findById(id){
-    return products.find((p) => p.id === id) || null;
+async function findById(id) {
+    const doc = await productsCollection.doc(id).get();
+    if (!doc.exists) {
+        return null;
+    }
+    return { id: doc.id, ...doc.data() };
 }
 
-async function addProduct(data){
+async function addProduct(data) {
     const product = {
         id: randomUUID(),
         name: data.name,
@@ -37,29 +42,27 @@ async function addProduct(data){
         description: data.description || '',
         url_image: data.url_image || ''
     };
-    products.push(product);
-    return product;
+    await productsCollection.doc(product.id).set(product);
+    return { id: product.id, ...product };
 }
 
-async function updateProduct(id, data){
-    const product = products.find((p) => p.id === id);
-    if(!product) return null;
-
-    product.name = data.name || product.name;
-    product.brand = data.brand || product.brand;
-    product.category = data.category || product.category;
-    product.stock = data.stock !== undefined ? data.stock : product.stock; 
-    product.price = data.price !== undefined ? data.price : product.price; 
-    product.description = data.description || product.description;
-    product.url_image = data.url_image || product.url_image;
-
-    return product;
+async function updateProduct(id, data) {
+    const docRef = productsCollection.doc(id);
+    const doc = await docRef.get();
+    if (!doc.exists) {
+        return null;
+    }
+    await docRef.update(data);
+    return { id: id, ...data };
 }
 
-async function deleteProduct(id){
-    const index = products.findIndex((p) => p.id === id);
-    if(index === -1) return null;
-    products.splice(index, 1);
+async function deleteProduct(id) {
+    const docRef = productsCollection.doc(id);
+    const doc = await docRef.get();
+    if (!doc.exists) {
+        return null;
+    }
+    await docRef.delete();
     return true;
 }
 

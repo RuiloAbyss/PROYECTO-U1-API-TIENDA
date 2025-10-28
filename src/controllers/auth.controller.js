@@ -21,7 +21,7 @@ async function login(req, res) {
     if(!email || !password){
         return res.status(400).json({message:"Correo o contraseña no pueden estar vacios"});
     }
-    const user = User.findByEmail(email); // No tenemos USER :( 
+    const user = await User.findByEmail(email);
     if(!user){ 
         return res.status(401).json({message:"Credenciales Inválidas"})
     }
@@ -35,13 +35,13 @@ async function login(req, res) {
 }
 
 async function getUsers(req, res) { // DEBUG (BORRAR DESPUES)
-    const users = User.getAllUsers();
+    const users = await User.getAllUsers();
     res.status(200).json(users);
 }
 
 async function getUserById(req, res) { // DEBUG (BORRAR DESPUES)
     const { id } = req.params;
-    const user = User.findById(id);
+    const user = await User.findById(id);
 
     if(!user) {
         return res.status(404).json({ message: "Usuario no encontrado" });
