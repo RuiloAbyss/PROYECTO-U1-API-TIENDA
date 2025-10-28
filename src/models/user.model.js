@@ -7,7 +7,7 @@ const usersCollection = db.collection("users");
 
 // Faturapi
 const Facturapi = require('facturapi').default;
-const facturapi = new Facturapi('sk_user_anXyMVwxYB2p6dZP6L4PPAKT5qpOGRPqzDEQ8gKjAv'); //sk_user_anXyMVwxYB2p6dZP6L4PPAKT5qpOGRPqzDEQ8gKjAv
+const facturapi = new Facturapi('sk_test_WAeBQ0ZGo9n4D1pZeOMonjmHAem7JMpPvOY8RgEzrk'); //sk_user_anXyMVwxYB2p6dZP6L4PPAKT5qpOGRPqzDEQ8gKjAv
 
 async function getAllUsers(){
     const users = await usersCollection.get();
