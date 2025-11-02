@@ -19,7 +19,8 @@ Para acceder a las rutas protegidas, primero debe obtener un token JWT iniciando
           "email": "nuevo.usuario@ejemplo.com",
           "password": "unaContraseñaSegura",
           "name": "Nombre de Usuario",
-          "address": "Dirección de envío"
+          "address": "Dirección de envío",
+          "tax_id": "XAXX010101000"
         }
         ```
 
@@ -73,7 +74,7 @@ Para todas las rutas protegidas, incluya el token obtenido en el encabezado (`He
 
 | Método | Ruta | Parámetros (Body) |
 | :--- | :--- | :--- |
-| `POST` | `/auth/register` | `email`, `password`, `name`, `address` |
+| `POST` | `/auth/register` | `email`, `password`, `name`, `address`, `tax_id` (RFC) |
 | `POST` | `/auth/login` | `email`, `password` |
 
 ### Módulo: Productos (`/products`)

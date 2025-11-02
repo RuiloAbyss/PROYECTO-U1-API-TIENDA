@@ -31,28 +31,30 @@ async function findByEmail(email){
 }
 
 //Facturapi - Crear cliente
-async function createClient(name, tax_id, email, address) {
-    console.log("tax_id: ",tax_id);
+async function createClient(name, tax_id, email, address, tax_system = '601') {
     try {
         console.log("Creando cliente en Facturapi...");
+        const addressInfo = typeof address === 'object' && address.zip ? 
+            { zip: address.zip, street: address.street } : 
+            { zip: '00000', street: address };
+
         const customer = await facturapi.customers.create({
             legal_name: name,
             tax_id: tax_id,
             email: email,
-            address: {
-                zip: '63446',
-                street: address,
-            },
-            tax_system: '601',
+            address: addressInfo,
+            tax_system: tax_system,
         });
         console.log('Cliente creado:', customer);
-        return customer.id
-        } catch (error) {
-        console.error('Error al crear el cliente:', error);
+        return customer.id;
+    } catch (error) {
+        console.error('Error al crear el cliente en Facturapi:', error.message);
+        return null;
     }
 }
        
 async function createUser({email, tax_id, password, name, address}) {
+    if (!tax_id) return { error: "El RFC (tax_id) es requerido." };
     const exiting = await findByEmail(email);
     if(exiting) return null;
 
@@ -72,14 +74,39 @@ async function createUser({email, tax_id, password, name, address}) {
     return{ id:user.id, id_client:user.id_client, email: user.email, tax_id:tax_id, name:user.name};
 }
 
-async function editUser(id, {email, password, name, address}){
+async function editUser(id, {email, password, name, address, tax_id}){
     const doc = await usersCollection.doc(id).get();
     if(!doc.exists) return null;
+
+    const userData = doc.data();
+
+    // Actualizar cliente en Facturapi si hay cambios relevantes
+    if (userData.id_client && (name || email || address || tax_id)) {
+        try {
+            console.log(`Actualizando cliente ${userData.id_client} en Facturapi...`);
+            const addressInfo = typeof address === 'object' && address.zip ? 
+                { zip: address.zip, street: address.street } : 
+                { street: address };
+
+            await facturapi.customers.update(userData.id_client, {
+                legal_name: name,
+                tax_id: tax_id,
+                email: email,
+                address: address ? addressInfo : undefined
+            });
+            console.log("Cliente en Facturapi actualizado.");
+        } catch (error) {
+            console.error('Error al actualizar el cliente en Facturapi:', error.message);
+            // Considera cómo manejar este error. Por ahora, solo lo registramos.
+        }
+    }
+
     const updated = {
         email: email ?? doc.data().email,
         password: password ? await bcrypt.hashSync(password,10) : doc.data().password,
         name: name ?? doc.data().name,
-        address: address ?? doc.data().address
+        address: address ?? doc.data().address,
+        tax_id: tax_id ?? doc.data().tax_id
     };
     await usersCollection.doc(id).update(updated);
     return { id, ...updated };
@@ -87,7 +114,19 @@ async function editUser(id, {email, password, name, address}){
 
 async function deleteUser(id){
     const doc = await usersCollection.doc(id).get();
-    if(!doc.exists) return null;
+    if (!doc.exists) return null;
+
+    const userData = doc.data();
+    if (userData.id_client) {
+        try {
+            console.log(`Eliminando cliente ${userData.id_client} de Facturapi...`);
+            await facturapi.customers.del(userData.id_client);
+            console.log("Cliente en Facturapi eliminado.");
+        } catch (error) {
+            console.error('Error al eliminar el cliente en Facturapi:', error.message);
+        }
+    }
+
     await usersCollection.doc(id).delete();
     return true;
 }
