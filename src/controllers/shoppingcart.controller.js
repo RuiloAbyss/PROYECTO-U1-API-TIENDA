@@ -1,12 +1,12 @@
 const ShoppingCart = require('../models/shoppingcart.model');
 
-function getCart(req, res) {
+async function getCart(req, res) {
     const userId = req.userId;
-    const cart = ShoppingCart.findByUserId(userId);
+    const cart = await ShoppingCart.findByUserId(userId);
     res.status(200).json(cart);
 }
 
-function addProductToCart(req, res) {
+async function addProductToCart(req, res) {
     const userId = req.userId;
     const { productId, quantity } = req.body;
 
@@ -14,20 +14,22 @@ function addProductToCart(req, res) {
         return res.status(400).json({ message: 'El ID del producto es obligatorio' });
     }
 
-    const cart = ShoppingCart.addtoCart(userId, productId, quantity);
+    const result = await ShoppingCart.addtoCart(userId, productId, quantity);
     
-    if (!cart) {
-        return res.status(404).json({ message: 'Producto no encontrado' });
+    // Si el modelo devuelve un objeto de error
+    if (result && result.error) {
+        return res.status(result.status).json({ message: result.error });
     }
 
-    res.status(200).json(cart);
+    res.status(200).json(result);
 }
 
-function removeProductFromCart(req, res) {
+
+async function removeProductFromCart(req, res) {
     const userId = req.userId;
     const productId = req.params.productId;
 
-    const deleted = ShoppingCart.removeFromCart(userId, productId);
+    const deleted = await ShoppingCart.removeFromCart(userId, productId);
 
     if (!deleted) {
         return res.status(404).json({ message: 'Producto no encontrado en el carrito' });
@@ -36,15 +38,28 @@ function removeProductFromCart(req, res) {
     res.status(204).send();
 }
 
-function clearUserCart(req, res) {
+async function clearUserCart(req, res) {
     const userId = req.userId;
-    const cart = ShoppingCart.clearCart(userId);
+    const cart = await ShoppingCart.clearCart(userId);
     res.status(200).json(cart);
+}
+
+async function checkout(req, res) {
+    const userId = req.userId;
+    const result = await ShoppingCart.checkoutCart(userId);
+
+    // Si el modelo devuelve un objeto de error (ej. carrito vacío o sin stock)
+    if (result && result.error) {
+        return res.status(result.status).json({ message: result.error });
+    }
+
+    res.status(200).json({ message: 'Compra finalizada con éxito', cart: result });
 }
 
 module.exports = {
     getCart,
     addProductToCart,
     removeProductFromCart,
-    clearUserCart
+    clearUserCart,
+    checkout
 };

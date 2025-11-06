@@ -9,4 +9,6 @@ router.post("/items", authenticate, controller.addProductToCart);
 router.delete("/items/:productId", authenticate, controller.removeProductFromCart);
 router.delete("/", authenticate, controller.clearUserCart);
 
+router.post('/checkout', authenticate, controller.checkout);
+
 module.exports = router;

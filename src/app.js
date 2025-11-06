@@ -11,7 +11,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/product", productRoutes);
-app.use("/api/cart", shoppingCartRoutes);
+app.use("/api/shoppingcart", shoppingCartRoutes);
 app.use("/api/auth", authRoutes);
 
 const PORT = process.env.PORT || 3000;
