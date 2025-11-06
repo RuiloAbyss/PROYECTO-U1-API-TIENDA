@@ -1,11 +1,16 @@
 const { randomUUID } = require('node:crypto')
 const Product = require('./product.model'); 
+const User = require('./user.model');
+
+//Firebase
+const { db } = require("../firebase");
+const cartsCollection = db.collection("shoppingCarts");
 
 const IVA_RATE = 0.16; 
 
-function calculateCartTotals(cart) {
+async function calculateCartTotals(cart) {
     let subtotal = 0;
-    
+
     cart.products.forEach(item => {
         subtotal += item.product.price * item.quantity;
     });
@@ -23,87 +28,128 @@ function calculateCartTotals(cart) {
     return cart;
 }
 
-let shoppingCarts = [
-    {//REMOVER CUANDO SE IMPLEMENTE EN FIREBASE
-        id: randomUUID(), 
-        userId: '@sa_j5l0bY8bXUuJ8Fh', // ID del admon
-        products: [],
-        subtotal: 0.00, 
-        iva: 0.00,      
-        total: 0.00,    
-        paid: false     
-    }
-];
-
-function findAll(){
-    return shoppingCarts;
+async function findAll(){
+    const snapshot = await cartsCollection.get();
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 }
 
-function findById(id){
-    const cart = shoppingCarts.find((c) => c.id === id) || null;
-    if (cart) {
-        return calculateCartTotals(cart);
+async function findById(id){
+    const doc = await cartsCollection.doc(id).get();
+    if (!doc.exists) {
+        return null;
     }
-    return null;
+    const cart = { id: doc.id, ...doc.data() };
+    return await calculateCartTotals(cart);
 }
 
-function findByUserId(userId){
-    let cart = shoppingCarts.find((c) => c.userId === userId);
+async function findByUserId(userId){
+    const user = await User.findById(userId);
+    if (!user) {
+        return null; 
+    }
+    // Excluimos la contraseña de los datos del usuario que se guardarán en el carrito
+    const { password, ...userWithoutPassword } = user;
+
+    // Buscamos un carrito activo (no pagado) para el usuario
+    const snapshot = await cartsCollection.where('userId', '==', userId).where('paid', '==', false).limit(1).get();
     
-    if (!cart) {
-        cart = {
+    if (snapshot.empty) {
+        const newCart = {
             id: randomUUID(),
             userId: userId,
+            user: userWithoutPassword, // Datos del usuario agregados
             products: [],
             subtotal: 0.00, 
             iva: 0.00,      
             total: 0.00,    
-            paid: false     
+            paid: false
         };
-        shoppingCarts.push(cart);
+        await cartsCollection.doc(newCart.id).set(newCart);
+        return newCart;
     }
     
-    return calculateCartTotals(cart);
+    const doc = snapshot.docs[0];
+    const cart = { id: doc.id, ...doc.data() };
+
+    // Aseguramos que los datos del usuario en el carrito estén actualizados
+    cart.user = userWithoutPassword;
+
+    return await calculateCartTotals(cart);
 }
 
-function addtoCart(userId, productId, quantity = 1){
-    const cart = findByUserId(userId);
-    const productDetails = Product.findById(productId);
+async function addtoCart(userId, productId, quantity = 1){
+    const cart = await findByUserId(userId);
+    const productDetails = await Product.findById(productId);
 
-    if (!productDetails) {
-        return null; 
+    if (!productDetails) { // Si el producto no existe
+        return { error: 'Producto no encontrado', status: 404 }; 
     }
 
-    const existingItem = cart.products.find(item => item.product.id === productId);
+    // Sugerencia: Verificar si hay stock disponible
+    if (productDetails.stock < quantity) {
+        return { error: 'No hay suficiente stock para el producto solicitado', status: 400 };
+    }
 
-    if (existingItem) {
-        existingItem.quantity += quantity;
+    const existingItemIndex = cart.products.findIndex(item => item.product.id === productId);
+
+    if (existingItemIndex > -1) {
+        cart.products[existingItemIndex].quantity += quantity;
     } else {
         cart.products.push({ product: productDetails, quantity: quantity });
     }
     
-    return calculateCartTotals(cart);
+    const updatedCart = await calculateCartTotals(cart);
+    await cartsCollection.doc(cart.id).update(updatedCart);
+    return updatedCart;
 }
 
-function removeFromCart(userId, productId) {
-    const cart = findByUserId(userId);
+async function removeFromCart(userId, productId) {
+    const cart = await findByUserId(userId);
     const initialLength = cart.products.length;
     
     cart.products = cart.products.filter(item => item.product.id !== productId);
     const wasDeleted = cart.products.length < initialLength;
     
     if (wasDeleted) {
-        // Recalcular los totales después de eliminar
-        calculateCartTotals(cart);
+        const updatedCart = await calculateCartTotals(cart);
+        await cartsCollection.doc(cart.id).update(updatedCart);
     }
 
     return wasDeleted;
 }
 
-function clearCart(userId) {
-    const cart = findByUserId(userId);
+async function clearCart(userId) {
+    const cart = await findByUserId(userId);
     cart.products = [];
-    return calculateCartTotals(cart);
+    const updatedCart = await calculateCartTotals(cart);
+    await cartsCollection.doc(cart.id).update(updatedCart);
+    return updatedCart;
 }
 
-module.exports = { findAll, findById, findByUserId, addtoCart, removeFromCart, clearCart, calculateCartTotals };
+async function checkoutCart(userId) {
+    const cart = await findByUserId(userId);
+
+    if (!cart || cart.products.length === 0) {
+        return { error: 'El carrito está vacío, no se puede procesar la compra.', status: 400 };
+    }
+
+    // Descontar el stock de cada producto
+    for (const item of cart.products) {
+        const product = await Product.findById(item.product.id);
+        if (product.stock < item.quantity) {
+            return { error: `No hay suficiente stock para el producto: ${product.name}`, status: 409 };
+        }
+        const newStock = product.stock - item.quantity;
+        await Product.updateProduct(item.product.id, { stock: newStock });
+    }
+
+    // Marcar el carrito como pagado
+    cart.paid = true;
+    await cartsCollection.doc(cart.id).update({ paid: true });
+
+    // Aquí podrías añadir la lógica para generar la factura con Facturapi
+
+    return cart;
+}
+
+module.exports = { findAll, findById, findByUserId, addtoCart, removeFromCart, clearCart, calculateCartTotals, checkoutCart };

@@ -64,6 +64,7 @@ Para todas las rutas protegidas, incluya el token obtenido en el encabezado (`He
 | **Cart** | `GET` | `/shoppingcart` | Obtiene el carrito del usuario autenticado. | ✅ |
 | **Cart** | `POST` | `/shoppingcart/items` | Agrega un producto al carrito. | ✅ |
 | **Cart** | `DELETE` | `/shoppingcart/items/:productId` | Elimina un producto específico del carrito. | ✅ |
+| **Cart** | `POST` | `/shoppingcart/checkout` | Finaliza la compra, descuenta stock y marca el carrito como pagado. | ✅ |
 | **Cart** | `DELETE` | `/shoppingcart` | Vacía completamente el carrito del usuario. | ✅ |
 
 ---
@@ -94,4 +95,5 @@ Para todas las rutas protegidas, incluya el token obtenido en el encabezado (`He
 | `GET` | `/shoppingcart` | Ninguno. Usa el `userId` del token. |
 | `POST` | `/shoppingcart/items` | **Body**: `productId` (requerido), `quantity` (number, opcional, default: 1) |
 | `DELETE`| `/shoppingcart/items/:productId`| **URL**: `productId` (ID del producto a eliminar) |
+| `POST` | `/shoppingcart/checkout` | Ninguno. Procesa el carrito activo del usuario. |
 | `DELETE`| `/shoppingcart` | Ninguno. Usa
