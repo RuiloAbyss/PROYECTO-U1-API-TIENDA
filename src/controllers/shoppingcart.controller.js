@@ -48,7 +48,7 @@ async function checkout(req, res) {
     const userId = req.userId;
     const result = await ShoppingCart.checkoutCart(userId);
 
-    // Si el modelo devuelve un objeto de error (ej. carrito vacío o sin stock)
+    // Si el modelo devuelve un objeto de error
     if (result && result.error) {
         return res.status(result.status).json({ message: result.error });
     }

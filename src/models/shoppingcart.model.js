@@ -6,6 +6,10 @@ const User = require('./user.model');
 const { db } = require("../firebase");
 const cartsCollection = db.collection("shoppingCarts");
 
+//Facturapi
+const Facturapi = require('facturapi').default;
+const facturapi = new Facturapi(process.env.FACTURAPI_KEY);
+
 const IVA_RATE = 0.16; 
 
 async function calculateCartTotals(cart) {
@@ -85,7 +89,7 @@ async function addtoCart(userId, productId, quantity = 1){
         return { error: 'Producto no encontrado', status: 404 }; 
     }
 
-    // Sugerencia: Verificar si hay stock disponible
+    // Verificar si hay stock disponible
     if (productDetails.stock < quantity) {
         return { error: 'No hay suficiente stock para el producto solicitado', status: 400 };
     }
@@ -147,7 +151,29 @@ async function checkoutCart(userId) {
     cart.paid = true;
     await cartsCollection.doc(cart.id).update({ paid: true });
 
-    // Aquí podrías añadir la lógica para generar la factura con Facturapi
+    // Generar la factura con Facturapi
+    try {
+        console.log("Generando factura en Facturapi...");
+        const items = cart.products.map(item => ({
+            quantity: item.quantity,
+            product: item.product.id_product_facturapi, // ID de producto de Facturapi
+        }));
+
+        const invoice = await facturapi.invoices.create({
+            customer: cart.user.id_client,
+            items: items,
+            payment_form: "03", // Transferencia electrónica de fondos
+            use: "G03" // Gastos en general
+        });
+
+        console.log(`Factura ${invoice.id} creada.`);
+        // Guardar el ID de la factura en el carrito
+        await cartsCollection.doc(cart.id).update({ invoice_id: invoice.id });
+        cart.invoice_id = invoice.id;
+
+    } catch (error) {
+        console.error("Error al generar la factura en Facturapi:", error.message);
+    }
 
     return cart;
 }
