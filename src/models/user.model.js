@@ -7,7 +7,7 @@ const usersCollection = db.collection("users");
 
 // Faturapi
 const Facturapi = require('facturapi').default;
-const facturapi = new Facturapi('sk_test_WAeBQ0ZGo9n4D1pZeOMonjmHAem7JMpPvOY8RgEzrk'); //sk_user_anXyMVwxYB2p6dZP6L4PPAKT5qpOGRPqzDEQ8gKjAv
+const facturapi = new Facturapi(process.env.FACTURAPI_KEY); //Esto debe trasnferirse a un .env al terminar las pruebas
 
 async function getAllUsers(){
     const users = await usersCollection.get();
@@ -36,7 +36,7 @@ async function createClient(name, tax_id, email, address, tax_system = '601') {
         console.log("Creando cliente en Facturapi...");
         const addressInfo = typeof address === 'object' && address.zip ? 
             { zip: address.zip, street: address.street } : 
-            { zip: '00000', street: address };
+            { zip: '63446', street: address };
 
         const customer = await facturapi.customers.create({
             legal_name: name,

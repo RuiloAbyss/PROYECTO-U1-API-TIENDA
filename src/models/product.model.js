@@ -3,7 +3,7 @@ const { randomUUID } = require('node:crypto')
 const { db } = require("../firebase");
 
 const Facturapi = require('facturapi').default;
-const facturapi = new Facturapi('sk_test_WAeBQ0ZGo9n4D1pZeOMonjmHAem7JMpPvOY8RgEzrk');
+const facturapi = new Facturapi(process.env.FACTURAPI_KEY); 
 
 const productsCollection = db.collection("products");
 
