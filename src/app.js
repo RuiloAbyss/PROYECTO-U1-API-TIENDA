@@ -1,8 +1,11 @@
+require('dotenv').config();
+
 const express = require("express");
 const productRoutes = require("./routes/product.routes");
 const shoppingCartRoutes = require("./routes/shoppingCart.routes");
 const authRoutes = require("./routes/auth.routes")
 const app = express();
+
 
 app.use(express.json());
 
