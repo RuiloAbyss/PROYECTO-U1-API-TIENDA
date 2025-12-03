@@ -1,5 +1,5 @@
 const { randomUUID } = require('node:crypto')
-const Product = require('./product.model'); 
+const Product = require('./product.model');
 const User = require('./user.model');
 
 //Firebase
@@ -10,7 +10,7 @@ const cartsCollection = db.collection("shoppingCarts");
 const Facturapi = require('facturapi').default;
 const facturapi = new Facturapi(process.env.FACTURAPI_KEY);
 
-const IVA_RATE = 0.16; 
+const IVA_RATE = 0.16;
 
 async function calculateCartTotals(cart) {
     let subtotal = 0;
@@ -24,7 +24,7 @@ async function calculateCartTotals(cart) {
     cart.subtotal = parseFloat(subtotal.toFixed(2));
     cart.iva = parseFloat(iva.toFixed(2));
     cart.total = parseFloat(total.toFixed(2));
-    
+
     if (typeof cart.paid === 'undefined') {
         cart.paid = false;
     }
@@ -32,12 +32,12 @@ async function calculateCartTotals(cart) {
     return cart;
 }
 
-async function findAll(){
+async function findAll() {
     const snapshot = await cartsCollection.get();
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 }
 
-async function findById(id){
+async function findById(id) {
     const doc = await cartsCollection.doc(id).get();
     if (!doc.exists) {
         return null;
@@ -46,32 +46,32 @@ async function findById(id){
     return await calculateCartTotals(cart);
 }
 
-async function findByUserId(userId){
+async function findByUserId(userId) {
     const user = await User.findById(userId);
     if (!user) {
-        return null; 
+        return null;
     }
     // Excluimos la contraseña de los datos del usuario que se guardarán en el carrito
     const { password, ...userWithoutPassword } = user;
 
     // Buscamos un carrito activo (no pagado) para el usuario
     const snapshot = await cartsCollection.where('userId', '==', userId).where('paid', '==', false).limit(1).get();
-    
+
     if (snapshot.empty) {
         const newCart = {
             id: randomUUID(),
             userId: userId,
             user: userWithoutPassword, // Datos del usuario agregados
             products: [],
-            subtotal: 0.00, 
-            iva: 0.00,      
-            total: 0.00,    
+            subtotal: 0.00,
+            iva: 0.00,
+            total: 0.00,
             paid: false
         };
         await cartsCollection.doc(newCart.id).set(newCart);
         return newCart;
     }
-    
+
     const doc = snapshot.docs[0];
     const cart = { id: doc.id, ...doc.data() };
 
@@ -81,14 +81,15 @@ async function findByUserId(userId){
     return await calculateCartTotals(cart);
 }
 
-async function addtoCart(userId, productId, quantity = 1){
+async function addtoCart(userId, productId, quantity = 1) {
     const cart = await findByUserId(userId);
     const productDetails = await Product.findById(productId);
 
     if (!productDetails) { // Si el producto no existe
-        return { error: 'Producto no encontrado', status: 404 }; 
+        return { error: 'Producto no encontrado', status: 404 };
     }
-
+    //convertir quantity a entero
+    quantity = parseInt(quantity);
     // Verificar si hay stock disponible
     if (productDetails.stock < quantity) {
         return { error: 'No hay suficiente stock para el producto solicitado', status: 400 };
@@ -101,7 +102,7 @@ async function addtoCart(userId, productId, quantity = 1){
     } else {
         cart.products.push({ product: productDetails, quantity: quantity });
     }
-    
+
     const updatedCart = await calculateCartTotals(cart);
     await cartsCollection.doc(cart.id).update(updatedCart);
     return updatedCart;
@@ -110,10 +111,10 @@ async function addtoCart(userId, productId, quantity = 1){
 async function removeFromCart(userId, productId) {
     const cart = await findByUserId(userId);
     const initialLength = cart.products.length;
-    
+
     cart.products = cart.products.filter(item => item.product.id !== productId);
     const wasDeleted = cart.products.length < initialLength;
-    
+
     if (wasDeleted) {
         const updatedCart = await calculateCartTotals(cart);
         await cartsCollection.doc(cart.id).update(updatedCart);
