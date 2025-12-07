@@ -4,10 +4,12 @@ const express = require("express");
 const productRoutes = require("./routes/product.routes");
 const shoppingCartRoutes = require("./routes/shoppingCart.routes");
 const authRoutes = require("./routes/auth.routes")
+const cors = require('cors');
 const app = express();
 
 
 app.use(express.json());
+app.use(cors({ origin: 'http://localhost:5173' }));
 
 app.get("/", (req, res) => {
   res.status(200).json({ status: "ok" });
