@@ -167,7 +167,7 @@ const Register = () => {
                         className={`w-full text-white font-bold py-3.5 px-4 rounded-xl shadow-lg mt-4 transition-all duration-200 
                             ${(loading || notification) 
                                 ? 'bg-green-500 cursor-not-allowed scale-100' // Estado de éxito/carga
-                                : 'bg-indigo-600 hover:bg-indigo-700 hover:shadow-indigo-500/50 hover:scale-102 shadow-indigo-500/30' // Estado normal
+                                : 'bg-orange-400 hover:bg-orange-500 hover:shadow-orange-500/50 hover:scale-102 shadow-orange-500/30' // Estado normal
                             }`}
                     >
                         {notification ? '¡Creado!' : (loading ? 'Registrando...' : 'Crear Cuenta y Comprar')}
