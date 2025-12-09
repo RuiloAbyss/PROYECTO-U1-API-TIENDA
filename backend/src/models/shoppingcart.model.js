@@ -179,4 +179,33 @@ async function checkoutCart(userId) {
     return cart;
 }
 
-module.exports = { findAll, findById, findByUserId, addtoCart, removeFromCart, clearCart, calculateCartTotals, checkoutCart };
+async function updateItemQuantity(userId, productId, quantity) {
+    const cart = await findByUserId(userId);
+    const productDetails = await Product.findById(productId);
+
+    if (!productDetails) {
+        return { error: 'Producto no encontrado', status: 404 };
+    }
+
+    quantity = parseInt(quantity);
+    if (quantity <= 0) {
+        return { error: 'La cantidad debe ser mayor a 0', status: 400 };
+    }
+
+    if (productDetails.stock < quantity) {
+        return { error: `Stock insuficiente. Solo hay ${productDetails.stock} disponibles.`, status: 409 };
+    }
+
+    const itemIndex = cart.products.findIndex(item => item.product.id === productId);
+    if (itemIndex === -1) {
+        return { error: 'Producto no encontrado en el carrito', status: 404 };
+    }
+
+    cart.products[itemIndex].quantity = quantity;
+
+    const updatedCart = await calculateCartTotals(cart);
+    await cartsCollection.doc(cart.id).update(updatedCart);
+    return updatedCart;
+}
+
+module.exports = { findAll, findById, findByUserId, addtoCart, removeFromCart, clearCart, calculateCartTotals, checkoutCart, updateItemQuantity };
