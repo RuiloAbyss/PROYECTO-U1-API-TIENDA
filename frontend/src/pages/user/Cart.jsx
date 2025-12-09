@@ -193,7 +193,13 @@ const Cart = () => {
                                                     {item.product.name}
                                                 </h3>
                                                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                                    {item.product.category}
+                                                    Categoria: {item.product.category}
+                                                </p>
+                                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                                    Descripción: {item.product.description}
+                                                </p>
+                                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                                    Stock: {item.product.stock}
                                                 </p>
                                             </div>
                                             <p className="text-lg font-medium text-gray-900 dark:text-white">
