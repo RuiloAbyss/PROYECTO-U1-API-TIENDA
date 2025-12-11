@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router";
+import { Routes, Route, Navigate } from "react-router";
 
 import Home from "./pages/user/Home";
 import Login from "./pages/auth/Login";
@@ -10,6 +10,17 @@ import Profile from "./pages/user/Profile";
 import AdminProducts from "./pages/admin/AdminProducts";
 import NotFound from "./pages/NotFound";
 import UserLayout from "./layouts/UserLayout";
+
+// Componente simple para proteger rutas de admin
+const AdminRoute = ({ children }) => {
+    const role = localStorage.getItem('role');
+    
+    if (role !== 'admin') {
+        return <NotFound />;
+    }
+    
+    return children;
+};
 
 function App() {
     return (
@@ -45,9 +56,11 @@ function App() {
                 </UserLayout>
             } />
             <Route path="/admin" element={
-                <UserLayout>
-                    <AdminProducts />
-                </UserLayout>
+                <AdminRoute>
+                    <UserLayout>
+                        <AdminProducts />
+                    </UserLayout>
+                </AdminRoute>
             } />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
