@@ -17,4 +17,11 @@ function authenticate(req, res, next){
     }
 }
 
-module.exports = { authenticate };
+function authorize(req, res, next) {
+    if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Acceso denegado: Se requieren permisos de administrador." });
+    }
+    next();
+}
+
+module.exports = { authenticate, authorize };
