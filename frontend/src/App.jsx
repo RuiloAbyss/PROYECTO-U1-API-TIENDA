@@ -10,6 +10,7 @@ import Profile from "./pages/user/Profile";
 import AdminProducts from "./pages/admin/AdminProducts";
 import NotFound from "./pages/NotFound";
 import UserLayout from "./layouts/UserLayout";
+import CheckoutSuccess from "./pages/user/CheckoutSuccess";
 
 // Componente simple para proteger rutas de admin
 const AdminRoute = ({ children }) => {
@@ -38,6 +39,11 @@ function App() {
             <Route path="/cart" element={
                 <UserLayout>
                     <Cart />
+                </UserLayout>
+            } />
+            <Route path="/checkout/success" element={
+                <UserLayout>
+                    <CheckoutSuccess />
                 </UserLayout>
             } />
             <Route path="/products" element={

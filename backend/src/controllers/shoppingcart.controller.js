@@ -47,16 +47,32 @@ async function clearUserCart(req, res) {
 
 async function checkout(req, res) {
     const userId = req.userId;
-    const result = await ShoppingCart.checkoutCart(userId);
+    const { orderId } = req.body;
+
+    if (!orderId) {
+        return res.status(400).json({ message: 'El ID de la orden de PayPal es obligatorio' });
+    }
+
+    const result = await ShoppingCart.checkoutCart(userId, orderId);
 
     // Si el modelo devuelve un objeto de error
     if (result && result.error) {
         return res.status(result.status).json({ message: result.error });
     }
 
+    res.status(200).json(result);
+}
 
+async function initiateCheckout(req, res) {
+    const userId = req.userId;
+    const result = await ShoppingCart.initiateCheckout(userId);
 
-    res.status(200).json({ message: 'Compra finalizada con éxito', cart: result });
+    // Si el modelo devuelve un objeto de error
+    if (result && result.error) {
+        return res.status(result.status).json({ message: result.error });
+    }
+
+    res.status(200).json(result);
 }
 
 async function updateItemQuantity(req, res) {
@@ -83,5 +99,6 @@ module.exports = {
     removeProductFromCart,
     clearUserCart,
     checkout,
+    initiateCheckout,
     updateItemQuantity
 };

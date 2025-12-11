@@ -4,10 +4,12 @@
   "description": "API REST para administración de tareas (CRUD)",
   "main": "src/app.js",
   "scripts": {
-    "start": "node src/app.js"
+    "start": "nodemon src/app.js"
   },
   "dependencies": {
+    "@green-api/whatsapp-api-client": "^0.4.4",
     "@sendgrid/mail": "^8.1.6",
+    "axios": "^1.13.2",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
