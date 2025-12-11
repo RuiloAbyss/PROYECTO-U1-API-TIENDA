@@ -7,12 +7,12 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    
+
     // Estado para la notificación de éxito
     const [notification, setNotification] = useState(null);
 
     // AJUSTA ESTO A TU PUERTO DE BACKEND
-    const API_URL = 'http://localhost:3000/api/auth'; 
+    const API_URL = 'http://localhost:3000/api/auth';
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -35,8 +35,11 @@ const Login = () => {
             }
 
             // --- ÉXITO ---
-            // 1. Guardar Token
+            // 1. Guardar Token y Rol
             localStorage.setItem('token', data.token);
+            if (data.role) {
+                localStorage.setItem('role', data.role);
+            }
 
             // 2. Mostrar Notificación de Éxito
             setNotification('¡Acceso concedido! Redirigiendo...');
@@ -54,7 +57,7 @@ const Login = () => {
 
     return (
         <div className="relative min-h-screen flex items-center justify-center p-6">
-            
+
             {/* === NOTIFICACIÓN FLOTANTE (TOAST) === */}
             {notification && (
                 <div className="fixed top-5 right-5 z-50 animate-bounce-in">
@@ -74,7 +77,7 @@ const Login = () => {
                 <div className="absolute top-[20%] right-[0%] w-[30rem] h-[30rem] rounded-full bg-cyan-400/30 dark:bg-cyan-600/20 blur-[80px]" />
                 <div className="absolute -bottom-[10%] left-[20%] w-[35rem] h-[35rem] rounded-full bg-violet-400/30 dark:bg-violet-600/20 blur-[100px]" />
             </div>
-            
+
             {/* === TARJETA DE LOGIN === */}
             <div className="relative bg-white/80 dark:bg-slate-800/90 backdrop-blur-md p-8 rounded-2xl shadow-2xl w-full max-w-md border border-white/50 dark:border-slate-700/50">
                 <div className="mb-8 text-center">
@@ -92,7 +95,7 @@ const Login = () => {
                         {error}
                     </div>
                 )}
-                
+
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div className="space-y-5">
                         {/* Email */}
@@ -100,8 +103,8 @@ const Login = () => {
                             <label className="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">
                                 Correo Electrónico
                             </label>
-                            <input 
-                                type="email" 
+                            <input
+                                type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="w-full px-4 py-3 rounded-lg bg-white dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all dark:text-white placeholder-slate-400"
@@ -109,14 +112,14 @@ const Login = () => {
                                 required
                             />
                         </div>
-                        
+
                         {/* Contraseña */}
                         <div>
                             <label className="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">
                                 Contraseña
                             </label>
-                            <input 
-                                type="password" 
+                            <input
+                                type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="w-full px-4 py-3 rounded-lg bg-white dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all dark:text-white placeholder-slate-400"
@@ -125,13 +128,13 @@ const Login = () => {
                             />
                         </div>
                     </div>
-                    
+
                     {/* Botón Principal (Cambia texto al cargar) */}
-                    <button 
+                    <button
                         type="submit"
                         disabled={loading || notification} // Bloquear si carga o si ya tuvo éxito
                         className={`w-full text-white font-bold py-3.5 px-4 rounded-xl shadow-lg mt-6 transition-all duration-200 
-                            ${(loading || notification) 
+                            ${(loading || notification)
                                 ? 'bg-green-500 cursor-not-allowed scale-100' // Estado de éxito/carga
                                 : 'bg-orange-400 hover:bg-orange-500 hover:shadow-orange-500/50 hover:scale-102 shadow-orange-500/30' // Estado normal
                             }`}
@@ -139,7 +142,7 @@ const Login = () => {
                         {notification ? '¡Entrando!' : (loading ? 'Verificando...' : 'Entrar')}
                     </button>
                 </form>
-                
+
                 <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700 text-center space-y-2">
                     <div>
                         <a href="/register" className="text-sm text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">

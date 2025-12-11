@@ -3,7 +3,7 @@ const { randomUUID } = require('node:crypto')
 const { db } = require("../firebase");
 
 const Facturapi = require('facturapi').default;
-const facturapi = new Facturapi(process.env.FACTURAPI_KEY); 
+const facturapi = new Facturapi(process.env.FACTURAPI_KEY);
 
 const productsCollection = db.collection("products");
 
@@ -35,19 +35,22 @@ async function findById(id) {
 }
 
 async function addProduct({ name, price, product_key, unit_key, ...data }) {
-    if (!product_key || !unit_key) {
-        throw new Error("Los campos 'product_key' y 'unit_key' son requeridos para Facturapi.");
-    }
+    // Valores por defecto si no vienen en la petición
+    const finalProductKey = '43232106'; // Software
+    const finalUnitKey = 'H87'; // Pieza
 
     // Crear producto en Facturapi
     let facturapiProduct;
     try {
         console.log("Creando producto en Facturapi...");
+        // Asumimos que el precio ingresado YA INCLUYE IVA. Facturapi espera el precio base.
+        const priceWithoutIva = (price / 1.16).toFixed(2);
+
         facturapiProduct = await facturapi.products.create({
             description: name,
-            product_key: product_key, // Clave de producto/servicio del SAT.
-            unit_key: unit_key,       // Clave de unidad del SAT.
-            price: price || 0
+            product_key: finalProductKey,
+            unit_key: finalUnitKey,
+            price: parseFloat(priceWithoutIva) // Enviamos precio sin IVA
         });
         console.log("Producto creado en Facturapi:", facturapiProduct.id);
     } catch (error) {
@@ -61,8 +64,8 @@ async function addProduct({ name, price, product_key, unit_key, ...data }) {
         id_product_facturapi: facturapiProduct.id, // Guardamos el ID de Facturapi
         name: name,
         price: price || 0,
-        product_key: product_key,
-        unit_key: unit_key,
+        product_key: finalProductKey,
+        unit_key: finalUnitKey,
         brand: data.brand || '',
         category: data.category || '',
         stock: data.stock || 0,
@@ -89,7 +92,7 @@ async function updateProduct(id, data) {
                 description: data.name,
                 product_key: data.product_key,
                 unit_key: data.unit_key,
-                price: data.price
+                price: data.price ? parseFloat((data.price / 1.16).toFixed(2)) : undefined
             });
             console.log("Producto en Facturapi actualizado.");
         } catch (error) {

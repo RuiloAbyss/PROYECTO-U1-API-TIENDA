@@ -5,6 +5,9 @@ import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import Cart from "./pages/user/Cart";
 import Products from "./pages/user/Products";
+import ProductDetail from "./pages/user/ProductDetail";
+import Profile from "./pages/user/Profile";
+import AdminProducts from "./pages/admin/AdminProducts";
 import NotFound from "./pages/NotFound";
 import UserLayout from "./layouts/UserLayout";
 
@@ -29,6 +32,21 @@ function App() {
             <Route path="/products" element={
                 <UserLayout>
                     <Products />
+                </UserLayout>
+            } />
+            <Route path="/products/:productId" element={
+                <UserLayout>
+                    <ProductDetail />
+                </UserLayout>
+            } />
+            <Route path="/perfil" element={
+                <UserLayout>
+                    <Profile />
+                </UserLayout>
+            } />
+            <Route path="/admin" element={
+                <UserLayout>
+                    <AdminProducts />
                 </UserLayout>
             } />
             <Route path="/login" element={<Login />} />

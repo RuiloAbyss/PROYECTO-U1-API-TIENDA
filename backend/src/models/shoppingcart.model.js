@@ -1,6 +1,9 @@
 const { randomUUID } = require('node:crypto')
 const Product = require('./product.model');
 const User = require('./user.model');
+const sgMail = require('@sendgrid/mail');
+
+sgMail.setApiKey('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');
 
 //Firebase
 const { db } = require("../firebase");
@@ -13,14 +16,15 @@ const facturapi = new Facturapi(process.env.FACTURAPI_KEY);
 const IVA_RATE = 0.16;
 
 async function calculateCartTotals(cart) {
-    let subtotal = 0;
+    let total = 0;
 
     cart.products.forEach(item => {
-        subtotal += item.product.price * item.quantity;
+        total += item.product.price * item.quantity;
     });
 
-    const iva = subtotal * IVA_RATE;
-    const total = subtotal + iva;
+    const subtotal = total / (1 + IVA_RATE);
+    const iva = total - subtotal;
+
     cart.subtotal = parseFloat(subtotal.toFixed(2));
     cart.iva = parseFloat(iva.toFixed(2));
     cart.total = parseFloat(total.toFixed(2));
@@ -171,12 +175,81 @@ async function checkoutCart(userId) {
         // Guardar el ID de la factura en el carrito
         await cartsCollection.doc(cart.id).update({ invoice_id: invoice.id });
         cart.invoice_id = invoice.id;
+        cart.verification_url = invoice.verification_url; // Añadir URL para el frontend si es necesario
+
+        // Enviar correo de confirmación
+        await sendConfirmationEmail(cart, invoice);
 
     } catch (error) {
-        console.error("Error al generar la factura en Facturapi:", error.message);
+        console.error("Error al generar la factura o enviar correo:", error.message);
     }
 
     return cart;
+}
+
+// Función auxiliar para enviar correo
+async function sendConfirmationEmail(cart, invoice) {
+    const userEmail = cart.user.email;
+
+    const productsHtml = cart.products.map(item => `
+        <tr style="border-bottom: 1px solid #eee;">
+            <td style="padding: 10px;">${item.product.name}</td>
+            <td style="padding: 10px; text-align: center;">${item.quantity}</td>
+            <td style="padding: 10px; text-align: right;">$${item.product.price}</td>
+            <td style="padding: 10px; text-align: right;">$${(item.product.price * item.quantity).toFixed(2)}</td>
+        </tr>
+    `).join('');
+
+    const msg = {
+        to: userEmail,
+        from: 'judimorenodu@ittepic.edu.mx',
+        subject: 'Confirmación de Compra - Tienda en Línea',
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
+                <h1 style="color: #2563EB; text-align: center;">¡Gracias por tu compra!</h1>
+                <p>Hola <strong>${cart.user.name}</strong>, tu pedido ha sido procesado exitosamente.</p>
+                
+                <div style="background-color: #F9FAFB; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <h3 style="margin-top: 0; color: #374151;">Resumen del Pedido</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background-color: #E5E7EB; color: #374151;">
+                                <th style="padding: 10px; text-align: left;">Producto</th>
+                                <th style="padding: 10px;">Cant.</th>
+                                <th style="padding: 10px; text-align: right;">Precio</th>
+                                <th style="padding: 10px; text-align: right;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${productsHtml}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" style="padding: 10px; text-align: right; font-weight: bold;">Total:</td>
+                                <td style="padding: 10px; text-align: right; font-weight: bold;">$${cart.total}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div style="background-color: #EFF6FF; padding: 15px; border-radius: 8px; border: 1px solid #BFDBFE;">
+                    <h3 style="margin-top: 0; color: #1E40AF;">Información de Facturación</h3>
+                    <p style="margin: 5px 0;"><strong>Folio Fiscal (UUID):</strong> ${invoice.uuid || 'Pendiente'}</p>
+                </div>
+
+                <p style="text-align: center; margin-top: 30px; color: #6B7280; font-size: 12px;">
+                    Si tienes dudas, contáctanos.
+                </p>
+            </div>
+        `,
+    };//<p style="margin: 5px 0;"><strong>Ver/Descargar Factura:</strong> <a href="${invoice.verification_url}" style="color: #2563EB; text-decoration: underline;" target="_blank">Haz clic aquí</a></p>
+
+    try {
+        await sgMail.send(msg);
+        console.log('Correo de confirmación enviado a', userEmail);
+    } catch (error) {
+        console.error('Error al enviar correo SendGrid:', error);
+    }
 }
 
 async function updateItemQuantity(userId, productId, quantity) {

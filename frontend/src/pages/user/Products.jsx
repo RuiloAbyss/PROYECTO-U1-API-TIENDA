@@ -131,7 +131,7 @@ const Products = () => {
                     <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
                         {filteredProducts.map((product) => (
                             <div key={product.id} className="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-                                <div className="aspect-square w-full overflow-hidden bg-gray-200 dark:bg-gray-700 xl:aspect-7/8 relative">
+                                <div className="aspect-square w-full overflow-hidden bg-gray-200 dark:bg-gray-700 xl:aspect-7/8 relative cursor-pointer" onClick={() => navigate(`/products/${product.id}`)}>
                                     <img
                                         alt={product.description || product.name}
                                         src={product.url_image || 'https://placehold.co/600x400?text=Sin+Imagen'}
@@ -139,14 +139,17 @@ const Products = () => {
                                     />
                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                                         <button
-                                            onClick={() => addToCart(product)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                addToCart(product);
+                                            }}
                                             className="bg-white text-gray-900 px-6 py-2 rounded-full font-bold transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:bg-gray-100"
                                         >
                                             Agregar al Carrito
                                         </button>
                                     </div>
                                 </div>
-                                <div className="p-4">
+                                <div className="p-4 cursor-pointer" onClick={() => navigate(`/products/${product.id}`)}>
                                     <h3 className="text-lg font-bold text-gray-900 dark:text-white truncate">
                                         {product.name}
                                     </h3>

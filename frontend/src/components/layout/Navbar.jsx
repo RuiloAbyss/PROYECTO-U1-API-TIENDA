@@ -8,6 +8,7 @@ const Navbar = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [cartCount, setCartCount] = useState(0);
     const [searchTerm, setSearchTerm] = useState('');
+    const [role, setRole] = useState('');
 
     const handleSearch = (e) => {
         if (e.key === 'Enter') {
@@ -19,11 +20,14 @@ const Navbar = () => {
     // Verificar autenticación y cargar carrito al montar el componente
     useEffect(() => {
         const token = localStorage.getItem('token');
+        const userRole = localStorage.getItem('role');
         if (token) {
             setIsLoggedIn(true);
+            setRole(userRole || ''); // Guardar rol en estado
             fetchCartCount(token);
         } else {
             setIsLoggedIn(false);
+            setRole('');
             setCartCount(0);
         }
     }, [location.pathname]); // Recargar al cambiar de ruta (útil tras login)
@@ -48,7 +52,9 @@ const Navbar = () => {
 
     const handleLogout = () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('role');
         setIsLoggedIn(false);
+        setRole('');
         setCartCount(0);
         setIsMenuOpen(false);
         navigate('/login');
@@ -128,6 +134,14 @@ const Navbar = () => {
                                     >
                                         Mi Cuenta
                                     </Link>
+                                    {role === 'admin' && (
+                                        <Link
+                                            to="/admin"
+                                            className="hidden md:block text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                        >
+                                            Admin
+                                        </Link>
+                                    )}
                                     <button
                                         onClick={handleLogout}
                                         className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 p-2 rounded-lg text-sm font-medium transition-colors tooltips"
@@ -211,6 +225,13 @@ const Navbar = () => {
                                         onClick={() => setIsMenuOpen(false)}
                                     >
                                         Mi Cuenta
+                                    </Link>
+                                    <Link
+                                        to="/admin"
+                                        className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-blue-600 transition-colors"
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        Admin
                                     </Link>
                                     <button
                                         onClick={handleLogout}

@@ -37,7 +37,7 @@ async function login(req, res) {
     }
 
     const token = jwt.sign({ id: user.id, email: email }, JWT_SECRET, { expiresIn: '30m' });
-    res.status(200).json({ token: token });
+    res.status(200).json({ token: token, role: user.role });
 }
 
 async function getUsers(req, res) { // DEBUG (BORRAR DESPUES)
@@ -82,11 +82,22 @@ async function remove(req, res) { // DEBUG (BORRAR DESPUES)
     res.status(204).send();
 }
 
+async function getCurrentUser(req, res) {
+    const userId = req.userId;
+    const user = await User.findById(userId);
+    if (!user) {
+        return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+    const { password, ...userWithoutPass } = user;
+    res.status(200).json(userWithoutPass);
+}
+
 module.exports = {
     register,
     login,
     getUsers,
     getUserById,
     edit,
-    remove
+    remove,
+    getCurrentUser
 }

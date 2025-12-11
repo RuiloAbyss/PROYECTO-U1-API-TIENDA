@@ -95,6 +95,29 @@ const Cart = () => {
         }
     };
 
+    const clearCart = async () => {
+        if (!confirm('¿Estás seguro de que quieres vaciar todo el carrito?')) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('http://localhost:3000/api/shoppingcart/', {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                setCart(null);
+                toggleNotification('Carrito vaciado');
+            } else {
+                alert('No se pudo vaciar el carrito');
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     const handleCheckout = async () => {
         setProcessing(true);
         try {
@@ -171,7 +194,18 @@ const Cart = () => {
                 </div>
             )}
 
-            <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white mb-8">Carrito de Compras</h1>
+            <div className="flex justify-between items-center mb-8">
+                <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white">Carrito de Compras</h1>
+                <button
+                    onClick={clearCart}
+                    className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium text-sm flex items-center hover:underline"
+                >
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    Vaciar Carrito
+                </button>
+            </div>
 
             <div className="lg:grid lg:grid-cols-12 lg:gap-x-12 lg:items-start">
                 <div className="lg:col-span-7">

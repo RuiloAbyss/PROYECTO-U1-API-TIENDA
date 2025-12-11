@@ -1,5 +1,6 @@
 const ShoppingCart = require('../models/shoppingcart.model');
 
+
 async function getCart(req, res) {
     const userId = req.userId;
     const cart = await ShoppingCart.findByUserId(userId);
@@ -52,6 +53,8 @@ async function checkout(req, res) {
     if (result && result.error) {
         return res.status(result.status).json({ message: result.error });
     }
+
+
 
     res.status(200).json({ message: 'Compra finalizada con éxito', cart: result });
 }

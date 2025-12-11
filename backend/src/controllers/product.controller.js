@@ -10,9 +10,10 @@ async function findById(req, res) {
     return product ? res.status(200).json(product) : res.status(404).json({ message: 'Producto no encontrado' });
 }
 async function addProduct(req, res) {
-    const { name, product_key, unit_key } = req.body;
-    if (!name || !product_key || !unit_key) {
-        return res.status(400).json({ message: 'Los campos name, product_key y unit_key son obligatorios' });
+    const { name } = req.body;
+    console.log(req.body);
+    if (!name) {
+        return res.status(400).json({ message: 'Los campos name son obligatorios' });
     }
 
     try {
@@ -34,10 +35,10 @@ async function deleteProduct(req, res) {
     return deleted ? res.status(204).send() : res.status(404).json({ message: 'Producto no encontrado' });
 }
 
-module.exports = { 
-    findAll, 
-    findById, 
-    addProduct, 
-    updateProduct, 
+module.exports = {
+    findAll,
+    findById,
+    addProduct,
+    updateProduct,
     deleteProduct
 };
