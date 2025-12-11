@@ -5,33 +5,39 @@ const User = require('../models/user.model');
 const JWT_SECRET = process.env.JWT_SECRET || "1234";
 
 async function register(req, res) {
-    const { email, password, name, address, tax_id} = req.body;
+    const { email, password, name, address, tax_id } = req.body;
     if (!email || !password || !name || !address) {
-        return res.status(400).json({message:"Los campos no pueden estar vacios"});
+        return res.status(400).json({ message: "Los campos no pueden estar vacios" });
     }
-    const created = await User.createUser({ email, password , name, address, tax_id});
-    if(!created) {
-        return res.status(409).json({message: "Este usuario ya existe"})
+    const created = await User.createUser({ email, password, name, address, tax_id });
+    if (!created) {
+        return res.status(409).json({ message: "Este usuario ya existe" })
+    }
+    if (created.error) {
+        return res.status(400).json({ message: created.error });
     }
     res.status(201).json(created);
 }
 
 async function login(req, res) {
-    const  {email, password } = req.body;
-    if(!email || !password){
-        return res.status(400).json({message:"Correo o contraseña no pueden estar vacios"});
+    const { email, password } = req.body;
+    if (!email || !password) {
+        return res.status(400).json({ message: "Correo o contraseña no pueden estar vacios" });
     }
     const user = await User.findByEmail(email);
-    if(!user){ 
-        return res.status(401).json({message:"Credenciales Inválidas"})
+    if (!user) {
+        return res.status(401).json({ message: "Credenciales Inválidas" })
     }
-    const match = await bcrypt.compare(password,user.password);
-    if(!match){
-        return res.status(401).json({message: "Credenciales Inválidas"}) // Se corrige el orden de status().json()
+    if (!user.isActive) {
+        return res.status(403).json({ message: "Tu cuenta ha sido desactivada." });
+    }
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+        return res.status(401).json({ message: "Credenciales Inválidas" }) // Se corrige el orden de status().json()
     }
 
-    const token = jwt.sign({id: user.id, email:email}, JWT_SECRET, {expiresIn:'30m'});
-    res.status(200).json({ token:token });
+    const token = jwt.sign({ id: user.id, email: email }, JWT_SECRET, { expiresIn: '30m' });
+    res.status(200).json({ token: token });
 }
 
 async function getUsers(req, res) { // DEBUG (BORRAR DESPUES)
@@ -43,7 +49,7 @@ async function getUserById(req, res) { // DEBUG (BORRAR DESPUES)
     const { id } = req.params;
     const user = await User.findById(id);
 
-    if(!user) {
+    if (!user) {
         return res.status(404).json({ message: "Usuario no encontrado" });
     }
     const { password, ...userWithoutPass } = user;
@@ -53,9 +59,9 @@ async function getUserById(req, res) { // DEBUG (BORRAR DESPUES)
 
 async function edit(req, res) { // DEBUG (BORRAR DESPUES)
     const { id } = req.params;
-    const { email, password, name, address } = req.body;
+    const { email, password, name, address, tax_id, isActive } = req.body;
 
-    const updated = await User.editUser(id, { email, password, name, address });
+    const updated = await User.editUser(id, { email, password, name, address, tax_id, isActive });
 
     if (!updated) {
         return res.status(404).json({ message: "Usuario no encontrado o no se pudo actualizar" });

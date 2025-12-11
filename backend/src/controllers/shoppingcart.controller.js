@@ -15,7 +15,7 @@ async function addProductToCart(req, res) {
     }
 
     const result = await ShoppingCart.addtoCart(userId, productId, quantity);
-    
+
     // Si el modelo devuelve un objeto de error
     if (result && result.error) {
         return res.status(result.status).json({ message: result.error });
@@ -34,7 +34,7 @@ async function removeProductFromCart(req, res) {
     if (!deleted) {
         return res.status(404).json({ message: 'Producto no encontrado en el carrito' });
     }
-    
+
     res.status(204).send();
 }
 
@@ -48,7 +48,7 @@ async function checkout(req, res) {
     const userId = req.userId;
     const result = await ShoppingCart.checkoutCart(userId);
 
-    // Si el modelo devuelve un objeto de error (ej. carrito vacío o sin stock)
+    // Si el modelo devuelve un objeto de error
     if (result && result.error) {
         return res.status(result.status).json({ message: result.error });
     }
@@ -56,10 +56,29 @@ async function checkout(req, res) {
     res.status(200).json({ message: 'Compra finalizada con éxito', cart: result });
 }
 
+async function updateItemQuantity(req, res) {
+    const userId = req.userId;
+    const productId = req.params.productId;
+    const { quantity } = req.body;
+
+    if (!quantity) {
+        return res.status(400).json({ message: 'La cantidad es obligatoria' });
+    }
+
+    const result = await ShoppingCart.updateItemQuantity(userId, productId, quantity);
+
+    if (result && result.error) {
+        return res.status(result.status).json({ message: result.error });
+    }
+
+    res.status(200).json(result);
+}
+
 module.exports = {
     getCart,
     addProductToCart,
     removeProductFromCart,
     clearUserCart,
-    checkout
+    checkout,
+    updateItemQuantity
 };
