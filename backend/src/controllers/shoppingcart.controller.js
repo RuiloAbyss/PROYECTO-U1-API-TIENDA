@@ -93,6 +93,26 @@ async function updateItemQuantity(req, res) {
     res.status(200).json(result);
 }
 
+async function sendWhatsAppNotification(req, res) {
+    const { cartId, phoneNumber } = req.body;
+
+    if (!cartId) {
+        return res.status(400).json({ message: 'El ID del carrito es obligatorio' });
+    }
+
+    if (!phoneNumber) {
+        return res.status(400).json({ message: 'El número de teléfono es obligatorio' });
+    }
+
+    const result = await ShoppingCart.sendWhatsAppConfirmation(cartId, phoneNumber);
+
+    if (result && result.error) {
+        return res.status(result.status).json({ message: result.error });
+    }
+
+    res.status(200).json(result);
+}
+
 module.exports = {
     getCart,
     addProductToCart,
@@ -100,5 +120,6 @@ module.exports = {
     clearUserCart,
     checkout,
     initiateCheckout,
-    updateItemQuantity
+    updateItemQuantity,
+    sendWhatsAppNotification
 };

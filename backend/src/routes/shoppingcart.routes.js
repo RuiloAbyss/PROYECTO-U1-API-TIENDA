@@ -14,4 +14,7 @@ router.delete("/", authenticate, controller.clearUserCart);
 router.post('/initiate-checkout', authenticate, controller.initiateCheckout);
 router.post('/complete-checkout', authenticate, controller.checkout);
 
+// Ruta para enviar confirmación de WhatsApp (opcional)
+router.post('/send-whatsapp', controller.sendWhatsAppNotification);
+
 module.exports = router;

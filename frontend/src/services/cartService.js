@@ -89,5 +89,21 @@ export const cartService = {
             throw new Error(data.message || 'Error al completar la compra');
         }
         return response.json();
+    },
+
+    // Enviar confirmación por WhatsApp (opcional)
+    sendWhatsAppConfirmation: async (cartId, phoneNumber) => {
+        const response = await fetch(`${API_URL}/shoppingcart/send-whatsapp`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ cartId, phoneNumber })
+        });
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.message || 'Error al enviar confirmación por WhatsApp');
+        }
+        return response.json();
     }
 };

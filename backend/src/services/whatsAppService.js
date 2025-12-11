@@ -1,4 +1,96 @@
 const whatsAppClient = require("@green-api/whatsapp-api-client");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+// Generar mensaje de confirmación con IA (Gemini)
+async function generatePurchaseConfirmation(cart, userData, retries = 2) {
+    try {
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey) {
+            console.warn("⚠️  GEMINI_API_KEY no configurado, usando mensaje por defecto");
+            return generateDefaultMessage(cart, userData);
+        }
+
+        // Preparar el detalle de productos
+        const productsDetail = cart.products.map(item => 
+            `- ${item.quantity}x ${item.product.name} (Unitario: $${item.product.price}, Total: $${(item.product.price * item.quantity).toFixed(2)})`
+        ).join('\n');
+
+        const prompt = `
+Redacta un mensaje de confirmación de compra en español, breve y amigable.
+Incluye (únicamente): nombre del cliente, el total pagado, y crea una lista de los productos comprados.
+Importante: Excluye cualquier oración que indique generacion por IA ("claro, aquí tienes...")
+
+Cliente: ${userData.name}
+Total pagado: $${cart.total} MXN
+Productos:
+${productsDetail}
+
+El mensaje debe ser cálido y profesional, confirmando que la compra fue exitosa.
+`;
+
+        console.log('🤖 Solicitando generación de mensaje a Gemini (modelo: gemini-1.5-flash)...');
+
+        // Configuración del SDK de Gemini
+        const genAI = new GoogleGenerativeAI(apiKey);
+        
+        // Obtener el modelo
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+        // Generar contenido
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+
+        if (text) {
+            console.log('✅ Mensaje generado con IA:', text);
+            return text;
+        } else {
+            console.warn("⚠️  Respuesta vacía de Gemini");
+            return generateDefaultMessage(cart, userData);
+        }
+
+    } catch (err) {
+        console.error("❌ Error al generar mensaje con IA:", err.message);
+        
+        // Diagnosticar el tipo de error
+        if (err.message.includes('429') || err.message.includes('quota')) {
+            console.error("⚠️  ERROR 429: Límite de cuota alcanzado en Gemini API");
+            console.error("💡 Soluciones:");
+            console.error("   1. Espera unos minutos antes de volver a intentar");
+            console.error("   2. Verifica tu cuota en: https://aistudio.google.com/app/apikey");
+            console.error("   3. Considera actualizar tu plan de Gemini");
+            
+            // Reintento con delay si quedan intentos
+            if (retries > 0) {
+                const delay = 3000; // 3 segundos
+                console.log(`⏳ Reintentando en ${delay/1000} segundos... (${retries} intentos restantes)`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                return generatePurchaseConfirmation(cart, userData, retries - 1);
+            }
+            
+            console.error("   4. Usando mensaje por defecto...");
+        } else if (err.message.includes('API key')) {
+            console.error("⚠️  ERROR: Problema con la API Key");
+            console.error("💡 Verifica que la API Key sea válida y tenga permisos");
+        } else if (err.message.includes('not found') || err.message.includes('404')) {
+            console.error("⚠️  ERROR 404: Modelo no encontrado");
+            console.error("💡 Verifica que el modelo 'gemini-1.5-flash' esté disponible");
+        } else {
+            console.error("❌ Error inesperado:", err);
+        }
+        
+        return generateDefaultMessage(cart, userData);
+    }
+}
+
+// Mensaje por defecto si la IA falla
+function generateDefaultMessage(cart, userData) {
+    const productsList = cart.products.map(item => 
+        `${item.quantity}x ${item.product.name}`
+    ).join(', ');
+
+    return `¡Hola ${userData.name}! ✅ Tu compra de $${cart.total} MXN ha sido confirmada. Productos: ${productsList}. ¡Gracias por tu preferencia!`;
+}
 
 exports.sendWhatsMessage = async (phone, message) => {
     const restAPI = whatsAppClient.restAPI({
@@ -9,8 +101,41 @@ exports.sendWhatsMessage = async (phone, message) => {
     phone = normalizeNumber(phone);
 
     restAPI.message.sendMessage(`${phone}@c.us`, null, message).then((data) => {
-        console.log('data');
+        console.log('✅ Mensaje de WhatsApp enviado:', data);
+    }).catch((error) => {
+        console.error('❌ Error al enviar WhatsApp:', error);
     });
+}
+
+// Enviar confirmación de compra por WhatsApp con IA
+exports.sendPurchaseConfirmation = async (cart, userData) => {
+    try {
+        console.log('📱 Generando mensaje de confirmación para WhatsApp...');
+        
+        // Verificar credenciales de WhatsApp
+        if (!process.env.ID_INSTANCE || !process.env.API_TOKEN_INSTANCE) {
+            console.warn('⚠️  Credenciales de WhatsApp no configuradas');
+            return { success: false, message: 'WhatsApp no configurado' };
+        }
+
+        // Verificar que el usuario tenga teléfono
+        if (!userData.phone) {
+            console.warn('⚠️  Usuario sin número de teléfono');
+            return { success: false, message: 'Usuario sin teléfono' };
+        }
+
+        // Generar mensaje con IA
+        const message = await generatePurchaseConfirmation(cart, userData);
+        
+        // Enviar mensaje
+        await exports.sendWhatsMessage(userData.phone, message);
+        
+        console.log('✅ Confirmación de compra enviada por WhatsApp');
+        return { success: true, message: 'Mensaje enviado' };
+    } catch (error) {
+        console.error('❌ Error al enviar confirmación por WhatsApp:', error);
+        return { success: false, message: error.message };
+    }
 }
 
 function normalizeNumber(numero) {

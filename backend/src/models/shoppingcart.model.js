@@ -3,6 +3,7 @@ const Product = require('./product.model');
 const User = require('./user.model');
 const sgMail = require('@sendgrid/mail');
 const paymentService = require('../services/paymentService');
+const whatsAppService = require('../services/whatsAppService');
 
 sgMail.setApiKey('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');
 
@@ -252,6 +253,8 @@ async function checkoutCart(userId, orderId) {
         // 5. Enviar correo de confirmación
         await sendConfirmationEmail(cart, invoice);
 
+        // Nota: WhatsApp se envía opcionalmente desde el frontend
+
     } catch (error) {
         console.error("Error al generar la factura o enviar correo:", error.message);
         // Nota: El pago ya fue procesado, la factura es adicional
@@ -355,4 +358,45 @@ async function updateItemQuantity(userId, productId, quantity) {
     return updatedCart;
 }
 
-module.exports = { findAll, findById, findByUserId, addtoCart, removeFromCart, clearCart, calculateCartTotals, initiateCheckout, checkoutCart, updateItemQuantity };
+// Enviar confirmación de compra por WhatsApp (opcional, llamado desde frontend)
+async function sendWhatsAppConfirmation(cartId, phoneNumber) {
+    try {
+        console.log('📱 Enviando confirmación de compra por WhatsApp...');
+        console.log('CartId:', cartId);
+        console.log('Phone:', phoneNumber);
+
+        // Buscar el carrito (debe estar pagado)
+        const cartDoc = await cartsCollection.doc(cartId).get();
+        
+        if (!cartDoc.exists) {
+            return { error: 'Carrito no encontrado', status: 404 };
+        }
+
+        const cart = { id: cartDoc.id, ...cartDoc.data() };
+
+        if (!cart.paid) {
+            return { error: 'El carrito no ha sido pagado', status: 400 };
+        }
+
+        // Crear objeto de usuario temporal con el número proporcionado
+        const userDataWithPhone = {
+            ...cart.user,
+            phone: phoneNumber
+        };
+
+        // Enviar WhatsApp usando el servicio
+        const result = await whatsAppService.sendPurchaseConfirmation(cart, userDataWithPhone);
+
+        if (result.success) {
+            console.log('✅ WhatsApp enviado exitosamente');
+            return { success: true, message: 'Confirmación enviada por WhatsApp' };
+        } else {
+            return { error: result.message, status: 500 };
+        }
+    } catch (error) {
+        console.error('❌ Error al enviar WhatsApp:', error);
+        return { error: 'Error al enviar confirmación por WhatsApp', status: 500 };
+    }
+}
+
+module.exports = { findAll, findById, findByUserId, addtoCart, removeFromCart, clearCart, calculateCartTotals, initiateCheckout, checkoutCart, updateItemQuantity, sendWhatsAppConfirmation };
