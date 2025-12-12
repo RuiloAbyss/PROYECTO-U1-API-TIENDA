@@ -1,5 +1,5 @@
 // services/cartService.js
-const API_URL = 'https://ecommerce-dsw.onrender.com';
+const API_URL = 'https://ecommerce-dsw.onrender.com/api';
 
 const getAuthHeaders = () => {
     const token = localStorage.getItem('token');
