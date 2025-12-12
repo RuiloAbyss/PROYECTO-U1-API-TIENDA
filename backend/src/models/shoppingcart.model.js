@@ -2,6 +2,8 @@ const { randomUUID } = require('node:crypto')
 const Product = require('./product.model');
 const User = require('./user.model');
 const sgMail = require('@sendgrid/mail');
+const paymentService = require('../services/paymentService');
+const whatsAppService = require('../services/whatsAppService');
 
 sgMail.setApiKey('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');
 
@@ -135,14 +137,79 @@ async function clearCart(userId) {
     return updatedCart;
 }
 
-async function checkoutCart(userId) {
+// Inicia el proceso de checkout creando la orden de pago en PayPal
+async function initiateCheckout(userId) {
     const cart = await findByUserId(userId);
 
     if (!cart || cart.products.length === 0) {
         return { error: 'El carrito está vacío, no se puede procesar la compra.', status: 400 };
     }
 
-    // Descontar el stock de cada producto
+    // Verificar que hay stock disponible antes de crear la orden de pago
+    for (const item of cart.products) {
+        const product = await Product.findById(item.product.id);
+        if (product.stock < item.quantity) {
+            return { error: `No hay suficiente stock para el producto: ${product.name}`, status: 409 };
+        }
+    }
+
+    // Crear orden de pago en PayPal
+    const paymentResult = await paymentService.createPayment(cart);
+
+    if (!paymentResult.success) {
+        return { error: paymentResult.message, status: 500 };
+    }
+
+    // Extraer el link de aprobación de PayPal
+    const approvalLink = paymentResult.data.links.find(link => link.rel === 'approve');
+
+    return {
+        success: true,
+        orderId: paymentResult.data.id,
+        approvalUrl: approvalLink?.href,
+        cartId: cart.id
+    };
+}
+
+async function checkoutCart(userId, orderId) {
+    console.log('🛒 Iniciando checkoutCart...');
+    console.log('UserId:', userId);
+    console.log('OrderId recibido:', orderId);
+    
+    const cart = await findByUserId(userId);
+
+    if (!cart || cart.products.length === 0) {
+        console.log('❌ Carrito vacío o no encontrado');
+        return { error: 'El carrito está vacío, no se puede procesar la compra.', status: 400 };
+    }
+
+    console.log('✅ Carrito encontrado:', cart.id);
+    
+    // Verificar si el carrito ya fue procesado
+    if (cart.paid) {
+        console.log('⚠️  Este carrito ya fue pagado previamente');
+        return cart; // Devolver el carrito ya procesado
+    }
+
+    // 1. CAPTURAR EL PAGO EN PAYPAL (ANTES DE TODO)
+    console.log("🔵 Capturando pago en PayPal...");
+    const paymentResult = await paymentService.captureAndRegisterPayment(orderId, userId, cart);
+
+    if (!paymentResult.success) {
+        console.log('❌ Error al capturar pago:', paymentResult.message);
+        return { error: paymentResult.message || 'Error al procesar el pago', status: 402 };
+    }
+
+    console.log(`✅ Pago capturado exitosamente: ${paymentResult.paymentId}`);
+    
+    // Si la orden ya fue capturada antes, verificar si el carrito ya fue procesado
+    if (paymentResult.alreadyCaptured && cart.paid) {
+        console.log('✅ Pago ya procesado, devolviendo carrito existente');
+        return cart;
+    }
+
+    // 2. Descontar el stock de cada producto (DESPUÉS DEL PAGO EXITOSO)
+    console.log('📦 Descontando stock de productos...');
     for (const item of cart.products) {
         const product = await Product.findById(item.product.id);
         if (product.stock < item.quantity) {
@@ -151,12 +218,18 @@ async function checkoutCart(userId) {
         const newStock = product.stock - item.quantity;
         await Product.updateProduct(item.product.id, { stock: newStock });
     }
+    console.log('✅ Stock actualizado');
 
-    // Marcar el carrito como pagado
+    // 3. Marcar el carrito como pagado
     cart.paid = true;
-    await cartsCollection.doc(cart.id).update({ paid: true });
+    await cartsCollection.doc(cart.id).update({ 
+        paid: true,
+        payment_id: paymentResult.paymentId,
+        payment_date: new Date().toISOString()
+    });
+    console.log('✅ Carrito marcado como pagado');
 
-    // Generar la factura con Facturapi
+    // 4. Generar la factura con Facturapi (DESPUÉS DEL PAGO)
     try {
         console.log("Generando factura en Facturapi...");
         const items = cart.products.map(item => ({
@@ -177,13 +250,17 @@ async function checkoutCart(userId) {
         cart.invoice_id = invoice.id;
         cart.verification_url = invoice.verification_url; // Añadir URL para el frontend si es necesario
 
-        // Enviar correo de confirmación
+        // 5. Enviar correo de confirmación
         await sendConfirmationEmail(cart, invoice);
+
+        // Nota: WhatsApp se envía opcionalmente desde el frontend
 
     } catch (error) {
         console.error("Error al generar la factura o enviar correo:", error.message);
+        // Nota: El pago ya fue procesado, la factura es adicional
     }
 
+    cart.payment_id = paymentResult.paymentId;
     return cart;
 }
 
@@ -281,4 +358,45 @@ async function updateItemQuantity(userId, productId, quantity) {
     return updatedCart;
 }
 
-module.exports = { findAll, findById, findByUserId, addtoCart, removeFromCart, clearCart, calculateCartTotals, checkoutCart, updateItemQuantity };
+// Enviar confirmación de compra por WhatsApp (opcional, llamado desde frontend)
+async function sendWhatsAppConfirmation(cartId, phoneNumber) {
+    try {
+        console.log('📱 Enviando confirmación de compra por WhatsApp...');
+        console.log('CartId:', cartId);
+        console.log('Phone:', phoneNumber);
+
+        // Buscar el carrito (debe estar pagado)
+        const cartDoc = await cartsCollection.doc(cartId).get();
+        
+        if (!cartDoc.exists) {
+            return { error: 'Carrito no encontrado', status: 404 };
+        }
+
+        const cart = { id: cartDoc.id, ...cartDoc.data() };
+
+        if (!cart.paid) {
+            return { error: 'El carrito no ha sido pagado', status: 400 };
+        }
+
+        // Crear objeto de usuario temporal con el número proporcionado
+        const userDataWithPhone = {
+            ...cart.user,
+            phone: phoneNumber
+        };
+
+        // Enviar WhatsApp usando el servicio
+        const result = await whatsAppService.sendPurchaseConfirmation(cart, userDataWithPhone);
+
+        if (result.success) {
+            console.log('✅ WhatsApp enviado exitosamente');
+            return { success: true, message: 'Confirmación enviada por WhatsApp' };
+        } else {
+            return { error: result.message, status: 500 };
+        }
+    } catch (error) {
+        console.error('❌ Error al enviar WhatsApp:', error);
+        return { error: 'Error al enviar confirmación por WhatsApp', status: 500 };
+    }
+}
+
+module.exports = { findAll, findById, findByUserId, addtoCart, removeFromCart, clearCart, calculateCartTotals, initiateCheckout, checkoutCart, updateItemQuantity, sendWhatsAppConfirmation };

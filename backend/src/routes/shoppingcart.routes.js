@@ -10,6 +10,11 @@ router.delete("/items/:productId", authenticate, controller.removeProductFromCar
 router.put("/items/:productId", authenticate, controller.updateItemQuantity);
 router.delete("/", authenticate, controller.clearUserCart);
 
-router.post('/checkout', authenticate, controller.checkout);
+// Rutas de checkout con PayPal
+router.post('/initiate-checkout', authenticate, controller.initiateCheckout);
+router.post('/complete-checkout', authenticate, controller.checkout);
+
+// Ruta para enviar confirmación de WhatsApp (opcional)
+router.post('/send-whatsapp', controller.sendWhatsAppNotification);
 
 module.exports = router;
