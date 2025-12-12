@@ -26,7 +26,7 @@ const Profile = () => {
                 return;
             }
 
-            const response = await fetch('http://localhost:3000/api/auth/me', {
+            const response = await fetch('https://ecommerce-dsw.onrender.com/api/auth/me', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -65,7 +65,7 @@ const Profile = () => {
         try {
             const token = localStorage.getItem('token');
             // Usamos el ID del usuario cargado para la ruta de actualización
-            const response = await fetch(`http://localhost:3000/api/auth/users/${user.id}`, {
+            const response = await fetch(`https://ecommerce-dsw.onrender.com/api/auth/users/${user.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

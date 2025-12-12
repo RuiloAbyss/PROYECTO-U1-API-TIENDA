@@ -12,7 +12,7 @@ const Login = () => {
     const [notification, setNotification] = useState(null);
 
     // AJUSTA ESTO A TU PUERTO DE BACKEND
-    const API_URL = 'http://localhost:3000/api/auth';
+    const API_URL = 'https://ecommerce-dsw.onrender.com/api/auth';
 
     const handleSubmit = async (e) => {
         e.preventDefault();

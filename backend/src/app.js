@@ -9,7 +9,7 @@ const app = express();
 
 
 app.use(express.json());
-app.use(cors({ origin: 'http://localhost:5173' }));
+app.use(cors({ origin: 'https://front-tienda-zp6w.onrender.com' }));
 
 app.get("/", (req, res) => {
   res.status(200).json({ status: "ok" });

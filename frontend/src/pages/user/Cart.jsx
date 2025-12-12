@@ -22,7 +22,7 @@ const Cart = () => {
                 return;
             }
 
-            const response = await fetch('http://localhost:3000/api/shoppingcart/', {
+            const response = await fetch('https://ecommerce-dsw.onrender.com/api/shoppingcart/', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -52,7 +52,7 @@ const Cart = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:3000/api/shoppingcart/items/${productId}`, {
+            const response = await fetch(`https://ecommerce-dsw.onrender.com/api/shoppingcart/items/${productId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -78,7 +78,7 @@ const Cart = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:3000/api/shoppingcart/items/${productId}`, {
+            const response = await fetch(`https://ecommerce-dsw.onrender.com/api/shoppingcart/items/${productId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -101,7 +101,7 @@ const Cart = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:3000/api/shoppingcart/', {
+            const response = await fetch('https://ecommerce-dsw.onrender.com/api/shoppingcart/', {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`

@@ -34,7 +34,7 @@ const Navbar = () => {
 
     const fetchCartCount = async (token) => {
         try {
-            const response = await fetch('http://localhost:3000/api/shoppingcart/', {
+            const response = await fetch('https://ecommerce-dsw.onrender.com/api/shoppingcart/', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }

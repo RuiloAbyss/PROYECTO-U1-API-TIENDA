@@ -10,7 +10,7 @@ const Register = () => {
     const [notification, setNotification] = useState(null);
 
     // AJUSTA ESTO A TU PUERTO DE BACKEND (Asegúrate de que coincida con tu consola)
-    const API_URL = 'http://localhost:3000/api/auth'; 
+    const API_URL = 'https://ecommerce-dsw.onrender.com/api/auth'; 
 
     const [formData, setFormData] = useState({
         name: '',

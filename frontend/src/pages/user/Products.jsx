@@ -18,7 +18,7 @@ const Products = () => {
                 const headers = { 'Content-Type': 'application/json' };
                 if (token) headers['Authorization'] = `Bearer ${token}`;
 
-                const response = await fetch('http://localhost:3000/api/product/', {
+                const response = await fetch('https://ecommerce-dsw.onrender.com/api/product/', {
                     method: 'GET',
                     headers: headers
                 });
@@ -51,7 +51,7 @@ const Products = () => {
         }
 
         try {
-            const response = await fetch('http://localhost:3000/api/shoppingcart/items', {
+            const response = await fetch('https://ecommerce-dsw.onrender.com/api/shoppingcart/items', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
