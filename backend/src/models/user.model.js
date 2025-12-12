@@ -86,7 +86,7 @@ async function createUser({ email, tax_id, password, name, address }) {
     return { id: user.id, id_client: user.id_client, email: user.email, tax_id: tax_id, name: user.name, isActive: user.isActive };
 }
 
-async function editUser(id, { email, password, name, address, tax_id, isActive }) {
+async function editUser(id, { email, password, name, address, tax_id, isActive, role }) {
     const doc = await usersCollection.doc(id).get();
     if (!doc.exists) return null;
 
@@ -119,7 +119,8 @@ async function editUser(id, { email, password, name, address, tax_id, isActive }
         name: name ?? doc.data().name,
         address: address ?? doc.data().address,
         tax_id: tax_id ?? doc.data().tax_id,
-        isActive: isActive !== undefined ? isActive : doc.data().isActive
+        isActive: isActive !== undefined ? isActive : doc.data().isActive,
+        role: role ?? doc.data().role
     };
     await usersCollection.doc(id).update(updated);
     return { id, ...updated };
