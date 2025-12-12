@@ -177,37 +177,37 @@ async function checkoutCart(userId, orderId) {
     const cart = await findByUserId(userId);
 
     if (!cart || cart.products.length === 0) {
-        console.log('❌ Carrito vacío o no encontrado');
+        console.log('Carrito vacío o no encontrado');
         return { error: 'El carrito está vacío, no se puede procesar la compra.', status: 400 };
     }
 
-    console.log('✅ Carrito encontrado:', cart.id);
+    console.log('Carrito encontrado:', cart.id);
     
     // Verificar si el carrito ya fue procesado
     if (cart.paid) {
-        console.log('⚠️  Este carrito ya fue pagado previamente');
+        console.log('Este carrito ya fue pagado previamente');
         return cart; // Devolver el carrito ya procesado
     }
 
     // 1. CAPTURAR EL PAGO EN PAYPAL (ANTES DE TODO)
-    console.log("🔵 Capturando pago en PayPal...");
+    console.log("Capturando pago en PayPal...");
     const paymentResult = await paymentService.captureAndRegisterPayment(orderId, userId, cart);
 
     if (!paymentResult.success) {
-        console.log('❌ Error al capturar pago:', paymentResult.message);
+        console.log('Error al capturar pago:', paymentResult.message);
         return { error: paymentResult.message || 'Error al procesar el pago', status: 402 };
     }
 
-    console.log(`✅ Pago capturado exitosamente: ${paymentResult.paymentId}`);
+    console.log(`Pago capturado exitosamente`);
     
     // Si la orden ya fue capturada antes, verificar si el carrito ya fue procesado
     if (paymentResult.alreadyCaptured && cart.paid) {
-        console.log('✅ Pago ya procesado, devolviendo carrito existente');
+        console.log('Pago ya procesado, devolviendo carrito existente');
         return cart;
     }
 
     // 2. Descontar el stock de cada producto (DESPUÉS DEL PAGO EXITOSO)
-    console.log('📦 Descontando stock de productos...');
+    console.log('Descontando stock de productos...');
     for (const item of cart.products) {
         const product = await Product.findById(item.product.id);
         if (product.stock < item.quantity) {
@@ -216,7 +216,7 @@ async function checkoutCart(userId, orderId) {
         const newStock = product.stock - item.quantity;
         await Product.updateProduct(item.product.id, { stock: newStock });
     }
-    console.log('✅ Stock actualizado');
+    console.log('Stock actualizado');
 
     // 3. Marcar el carrito como pagado
     cart.paid = true;
@@ -225,11 +225,10 @@ async function checkoutCart(userId, orderId) {
         payment_id: paymentResult.paymentId,
         payment_date: new Date().toISOString()
     });
-    console.log('✅ Carrito marcado como pagado');
 
     // 4. Generar la factura con Facturapi (DESPUÉS DEL PAGO)
     try {
-        console.log("Generando factura en Facturapi...");
+        console.log("Generando factura...");
         const items = cart.products.map(item => ({
             quantity: item.quantity,
             product: item.product.id_product_facturapi, // ID de producto de Facturapi
@@ -242,7 +241,6 @@ async function checkoutCart(userId, orderId) {
             use: "G03" // Gastos en general
         });
 
-        console.log(`Factura ${invoice.id} creada.`);
         // Guardar el ID de la factura en el carrito
         await cartsCollection.doc(cart.id).update({ invoice_id: invoice.id });
         cart.invoice_id = invoice.id;
@@ -294,9 +292,7 @@ async function updateItemQuantity(userId, productId, quantity) {
 // Enviar confirmación de compra por WhatsApp (opcional, llamado desde frontend)
 async function sendWhatsAppConfirmation(cartId, phoneNumber) {
     try {
-        console.log('📱 Enviando confirmación de compra por WhatsApp...');
-        console.log('CartId:', cartId);
-        console.log('Phone:', phoneNumber);
+        console.log('Enviando confirmación de compra por WhatsApp...');
 
         // Buscar el carrito (debe estar pagado)
         const cartDoc = await cartsCollection.doc(cartId).get();
@@ -321,13 +317,12 @@ async function sendWhatsAppConfirmation(cartId, phoneNumber) {
         const result = await whatsAppService.sendPurchaseConfirmation(cart, userDataWithPhone);
 
         if (result.success) {
-            console.log('✅ WhatsApp enviado exitosamente');
-            return { success: true, message: 'Confirmación enviada por WhatsApp' };
+            return { success: true};
         } else {
             return { error: result.message, status: 500 };
         }
     } catch (error) {
-        console.error('❌ Error al enviar WhatsApp:', error);
+        console.error('Error al enviar WhatsApp:', error);
         return { error: 'Error al enviar confirmación por WhatsApp', status: 500 };
     }
 }

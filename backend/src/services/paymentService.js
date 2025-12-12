@@ -10,7 +10,7 @@ const URL_FRONT = process.env.APP_URL_BASE;
 
 const getAccessToken = async () => {
   try {
-    console.log('🔑 Solicitando access token de PayPal...');
+    console.log('Solicitando access token de PayPal...');
     console.log('Client ID:', CLIENT ? `${CLIENT.substring(0, 10)}...` : 'NO CONFIGURADO');
     console.log('Secret:', SECRET ? 'CONFIGURADO' : 'NO CONFIGURADO');
     
@@ -21,10 +21,9 @@ const getAccessToken = async () => {
         "Content-Type": "application/x-www-form-urlencoded",
       },
     });
-    console.log('✅ Access token obtenido correctamente');
     return res.data.access_token;
   } catch (error) {
-    console.error('❌ Error al obtener access token:', error?.response?.data || error.message);
+    console.error('Error al obtener access token:', error?.response?.data || error.message);
     throw error;
   }
 };
@@ -32,13 +31,12 @@ const getAccessToken = async () => {
 //Servicio para capturar y registrar pago del carrito
 exports.captureAndRegisterPayment = async (orderId, userId, cart) => {
   try {
-    console.log('🔵 Iniciando captura de pago...');
+    console.log('Iniciando captura de pago...');
     console.log('OrderId:', orderId);
     console.log('UserId:', userId);
     console.log('Cart Total:', cart.total);
     
     const accessToken = await getAccessToken();
-    console.log('✅ Access token obtenido');
 
     const captureRes = await axios.post(
       `${PAYPAL_API}/v2/checkout/orders/${orderId}/capture`,
@@ -51,7 +49,7 @@ exports.captureAndRegisterPayment = async (orderId, userId, cart) => {
       }
     );
 
-    console.log('✅ Pago capturado en PayPal');
+    console.log('Pago capturado en PayPal');
     const transaction = captureRes.data.purchase_units[0].payments.captures[0];
 
     //Consultar nombre del usuario
@@ -78,20 +76,18 @@ exports.captureAndRegisterPayment = async (orderId, userId, cart) => {
       cart_id: cart.id,
     });
 
-    console.log('✅ Pago registrado en Firestore:', paymentId);
     return { success: true, paymentId, transaction };
   } catch (error) {
-    console.error("❌ Error al capturar pago:", error?.response?.data || error.message);
+    console.error("Error al capturar pago:", error?.response?.data || error.message);
     
     // Si la orden ya fue capturada, PayPal devuelve un error específico
     if (error?.response?.data?.name === 'UNPROCESSABLE_ENTITY' && 
         error?.response?.data?.details?.[0]?.issue === 'ORDER_ALREADY_CAPTURED') {
-      console.log('⚠️  La orden ya fue capturada previamente');
+      console.log('La orden ya fue capturada previamente');
       // Buscar el pago existente en Firestore
       const existingPayment = await paymentsCollection.where('cart_id', '==', cart.id).limit(1).get();
       if (!existingPayment.empty) {
         const paymentDoc = existingPayment.docs[0];
-        console.log('✅ Pago existente encontrado:', paymentDoc.id);
         return { success: true, paymentId: paymentDoc.id, alreadyCaptured: true };
       }
     }
