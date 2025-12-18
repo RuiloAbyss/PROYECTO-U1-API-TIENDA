@@ -32,7 +32,7 @@ const AdminProducts = () => {
             const token = localStorage.getItem('token');
             if (!token) return navigate('/login');
 
-            const response = await fetch('http://localhost:3000/api/product/', {
+            const response = await fetch('https://ecommerce-dsw.onrender.com/api/product/', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
@@ -56,7 +56,7 @@ const AdminProducts = () => {
         if (!confirm('¿Seguro que deseas eliminar este producto?')) return;
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:3000/api/product/${id}`, {
+            const response = await fetch(`https://ecommerce-dsw.onrender.com/api/product/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -81,8 +81,8 @@ const AdminProducts = () => {
             const token = localStorage.getItem('token');
             const method = currentProduct.id ? 'PUT' : 'POST';
             const url = currentProduct.id
-                ? `http://localhost:3000/api/product/${currentProduct.id}`
-                : 'http://localhost:3000/api/product/';
+                ? `https://ecommerce-dsw.onrender.com/api/product/${currentProduct.id}`
+                : 'https://ecommerce-dsw.onrender.com/api/product/';
 
             const response = await fetch(url, {
                 method: method,

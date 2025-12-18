@@ -92,6 +92,71 @@ async function getCurrentUser(req, res) {
     res.status(200).json(userWithoutPass);
 }
 
+async function getAllUsersAdmin(req, res) {
+    try {
+        const users = await User.getAllUsers();
+        const usersWithoutPasswords = users.map(({ password, ...user }) => user);
+        res.status(200).json(usersWithoutPasswords);
+    } catch (error) {
+        console.error('Error al obtener usuarios:', error);
+        res.status(500).json({ message: "Error al obtener usuarios" });
+    }
+}
+
+async function updateUserRole(req, res) {
+    try {
+        const { id } = req.params;
+        const { role } = req.body;
+
+        if (!role || !['admin', 'user'].includes(role)) {
+            return res.status(400).json({ message: "Rol inválido. Debe ser 'admin' o 'user'" });
+        }
+
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: "Usuario no encontrado" });
+        }
+
+        const updated = await User.editUser(id, { role });
+
+        if (!updated) {
+            return res.status(500).json({ message: "No se pudo actualizar el rol" });
+        }
+
+        res.status(200).json({ message: "Rol actualizado correctamente", user: updated });
+    } catch (error) {
+        console.error('Error al actualizar rol:', error);
+        res.status(500).json({ message: "Error al actualizar rol" });
+    }
+}
+
+async function deleteUserAdmin(req, res) {
+    try {
+        const { id } = req.params;
+
+        // No permitir borrar el propio usuario admin
+        if (id === req.userId) {
+            return res.status(403).json({ message: "No puedes eliminar tu propia cuenta" });
+        }
+
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: "Usuario no encontrado" });
+        }
+
+        const deleted = await User.deleteUser(id);
+
+        if (!deleted) {
+            return res.status(500).json({ message: "No se pudo eliminar el usuario" });
+        }
+
+        res.status(200).json({ message: "Usuario eliminado correctamente" });
+    } catch (error) {
+        console.error('Error al eliminar usuario:', error);
+        res.status(500).json({ message: "Error al eliminar usuario" });
+    }
+}
+
 module.exports = {
     register,
     login,
@@ -99,5 +164,8 @@ module.exports = {
     getUserById,
     edit,
     remove,
-    getCurrentUser
+    getCurrentUser,
+    getAllUsersAdmin,
+    updateUserRole,
+    deleteUserAdmin
 }

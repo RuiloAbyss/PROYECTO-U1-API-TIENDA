@@ -1,6 +1,9 @@
 import { Link } from 'react-router';
 
 const NotFound = () => {
+    const role = localStorage.getItem('role');
+    const homeLink = role === 'admin' ? '/admin/productos' : '/';
+
     return (
         <main className="grid min-h-screen place-items-center bg-gray-100 dark:bg-gray-900 px-6 py-24 sm:py-32 lg:px-8">
             <div className="text-center">
@@ -12,16 +15,10 @@ const NotFound = () => {
                 </p>
                 <div className="mt-10 flex items-center justify-center gap-x-6">
                     <Link
-                        to="/"
+                        to={homeLink}
                         className="rounded-md bg-blue-600 dark:bg-blue-500 px-3.5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-blue-500 dark:hover:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 transition-colors"
                     >
-                        Volver al inicio
-                    </Link>
-                    <Link 
-                        to="#" 
-                        className="text-sm font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                    >
-                        Contactar soporte <span aria-hidden="true">&rarr;</span>
+                        {role === 'admin' ? 'Volver al panel' : 'Volver al inicio'}
                     </Link>
                 </div>
             </div>

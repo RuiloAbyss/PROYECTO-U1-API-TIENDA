@@ -23,7 +23,7 @@ const Home = () => {
 
                 // Aquí obtenemos TODOS los productos y filtramos en el cliente (frontend)
                 // Podríamos pasar el filtro a la API si el backend lo soportara
-                const response = await fetch('http://localhost:3000/api/product/', {
+                const response = await fetch('https://ecommerce-dsw.onrender.com/api/product/', {
                     method: 'GET',
                     headers: headers
                 });
@@ -59,7 +59,7 @@ const Home = () => {
         }
 
         try {
-            const response = await fetch('http://localhost:3000/api/shoppingcart/items', {
+            const response = await fetch('https://ecommerce-dsw.onrender.com/api/shoppingcart/items', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -47,16 +47,32 @@ async function clearUserCart(req, res) {
 
 async function checkout(req, res) {
     const userId = req.userId;
-    const result = await ShoppingCart.checkoutCart(userId);
+    const { orderId } = req.body;
+
+    if (!orderId) {
+        return res.status(400).json({ message: 'El ID de la orden de PayPal es obligatorio' });
+    }
+
+    const result = await ShoppingCart.checkoutCart(userId, orderId);
 
     // Si el modelo devuelve un objeto de error
     if (result && result.error) {
         return res.status(result.status).json({ message: result.error });
     }
 
+    res.status(200).json(result);
+}
 
+async function initiateCheckout(req, res) {
+    const userId = req.userId;
+    const result = await ShoppingCart.initiateCheckout(userId);
 
-    res.status(200).json({ message: 'Compra finalizada con éxito', cart: result });
+    // Si el modelo devuelve un objeto de error
+    if (result && result.error) {
+        return res.status(result.status).json({ message: result.error });
+    }
+
+    res.status(200).json(result);
 }
 
 async function updateItemQuantity(req, res) {
@@ -77,11 +93,33 @@ async function updateItemQuantity(req, res) {
     res.status(200).json(result);
 }
 
+async function sendWhatsAppNotification(req, res) {
+    const { cartId, phoneNumber } = req.body;
+
+    if (!cartId) {
+        return res.status(400).json({ message: 'El ID del carrito es obligatorio' });
+    }
+
+    if (!phoneNumber) {
+        return res.status(400).json({ message: 'El número de teléfono es obligatorio' });
+    }
+
+    const result = await ShoppingCart.sendWhatsAppConfirmation(cartId, phoneNumber);
+
+    if (result && result.error) {
+        return res.status(result.status).json({ message: result.error });
+    }
+
+    res.status(200).json(result);
+}
+
 module.exports = {
     getCart,
     addProductToCart,
     removeProductFromCart,
     clearUserCart,
     checkout,
-    updateItemQuantity
+    initiateCheckout,
+    updateItemQuantity,
+    sendWhatsAppNotification
 };
