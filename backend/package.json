@@ -2,9 +2,9 @@
   "name": "electronic-store-backend",
   "version": "1.0.0",
   "description": "Ecomerce Con Servicios Web e IA)",
-  "main": "api/index.js",
+  "main": "index.js",
   "scripts": {
-    "start": "nodemon api/index.js"
+    "start": "node index.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
