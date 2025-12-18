@@ -17,7 +17,7 @@ const AdminUsers = () => {
             const token = localStorage.getItem('token');
             if (!token) return navigate('/login');
 
-            const response = await fetch('https://ecommerce-dsw.onrender.com/api/auth/users', {
+            const response = await fetch('https://electronic-store-ruiloop.vercel.app/api/auth/users', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
@@ -36,7 +36,7 @@ const AdminUsers = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`https://ecommerce-dsw.onrender.com/api/auth/users/${userId}`, {
+            const response = await fetch(`https://electronic-store-ruiloop.vercel.app/api/auth/users/${userId}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -59,7 +59,7 @@ const AdminUsers = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`https://ecommerce-dsw.onrender.com/api/auth/users/${userId}/role`, {
+            const response = await fetch(`https://electronic-store-ruiloop.vercel.app/api/auth/users/${userId}/role`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,

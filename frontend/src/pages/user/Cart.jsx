@@ -22,7 +22,7 @@ const Cart = () => {
                 return;
             }
 
-            const response = await fetch('https://ecommerce-dsw.onrender.com/api/shoppingcart/', {
+            const response = await fetch('https://electronic-store-ruiloop.vercel.app/api/shoppingcart/', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -52,7 +52,7 @@ const Cart = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`https://ecommerce-dsw.onrender.com/api/shoppingcart/items/${productId}`, {
+            const response = await fetch(`https://electronic-store-ruiloop.vercel.app/api/shoppingcart/items/${productId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -78,7 +78,7 @@ const Cart = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`https://ecommerce-dsw.onrender.com/api/shoppingcart/items/${productId}`, {
+            const response = await fetch(`https://electronic-store-ruiloop.vercel.app/api/shoppingcart/items/${productId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -101,7 +101,7 @@ const Cart = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('https://ecommerce-dsw.onrender.com/api/shoppingcart/', {
+            const response = await fetch('https://electronic-store-ruiloop.vercel.app/api/shoppingcart/', {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`

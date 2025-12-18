@@ -12,7 +12,7 @@ const Login = () => {
     const [notification, setNotification] = useState(null);
 
     // AJUSTA ESTO A TU PUERTO DE BACKEND
-    const API_URL = 'https://electronic-store-nu.vercel.app/api/auth';
+    const API_URL = 'https://electronic-store-ruiloop.vercel.app/api/auth';
 
     const handleSubmit = async (e) => {
         e.preventDefault();
