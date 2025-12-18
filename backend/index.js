@@ -19,11 +19,9 @@ app.use("/api/product", productRoutes);
 app.use("/api/shoppingcart", shoppingCartRoutes);
 app.use("/api/auth", authRoutes);
 
-if (process.env.NODE_ENV !== 'production') {
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
-}
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
 
 module.exports = app;
