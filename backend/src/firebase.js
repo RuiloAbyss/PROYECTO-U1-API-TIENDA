@@ -1,14 +1,21 @@
-const admin = require("firebase-admin");
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
-  ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT) 
-  : require('./serviceAccountKey.json');
+const admin = require('firebase-admin');
 
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-  });
+let serviceAccount;
+
+try {
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  } else {
+    serviceAccount = require('../serviceAccountKey.json');
+  }
+
+  if (!admin.apps.length) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+    });
+  }
+} catch (error) {
+  console.error("Error crítico al inicializar Firebase:", error.message);
 }
 
-const db = admin.firestore();
-
-module.exports = { db };
+module.exports = admin;
