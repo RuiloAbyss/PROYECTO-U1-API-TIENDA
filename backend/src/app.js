@@ -9,7 +9,7 @@ const app = express();
 
 
 app.use(express.json());
-app.use(cors({ origin: 'https://front-tienda-zp6w.onrender.com' }));
+app.use(cors({ origin: 'https://electronic-store-nu.vercel.app' }));
 
 app.get("/", (req, res) => {
   res.status(200).json({ status: "ok" });
