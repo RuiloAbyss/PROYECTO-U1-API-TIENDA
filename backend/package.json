@@ -1,7 +1,7 @@
 {
-  "name": "tareasrest",
+  "name": "electronic-store-backend",
   "version": "1.0.0",
-  "description": "API REST para administración de tareas (CRUD)",
+  "description": "Ecomerce Con Servicios Web e IA)",
   "main": "src/app.js",
   "scripts": {
     "start": "nodemon src/app.js"
