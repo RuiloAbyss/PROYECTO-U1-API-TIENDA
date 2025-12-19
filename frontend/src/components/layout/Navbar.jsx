@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import API_BASE_URL from '../../pages/config';
 
 const Navbar = () => {
     const navigate = useNavigate();
@@ -34,7 +35,7 @@ const Navbar = () => {
 
     const fetchCartCount = async (token) => {
         try {
-            const response = await fetch('https://ecommerce-dsw.onrender.com/api/shoppingcart/', {
+            const response = await fetch(`${API_BASE_URL}/api/shoppingcart/`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
