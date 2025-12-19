@@ -6,7 +6,7 @@ const User = require("../models/user.model");
 const CLIENT = process.env.PAYPAL_CLIENT_ID;
 const SECRET = process.env.PAYPAL_CLIENT_SECRET;
 const PAYPAL_API = "https://api-m.sandbox.paypal.com"; // cambiar a live en producción
-const URL_FRONT = process.env.APP_URL_BASE;
+const URL_FRONT = process.env.ALLOWED_HOSTS
 
 const getAccessToken = async () => {
   try {
