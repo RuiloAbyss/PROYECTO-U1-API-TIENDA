@@ -9,7 +9,11 @@ const app = express();
 
 
 app.use(express.json());
-app.use(cors({ origin: 'https://electronic-store-nu.vercel.app' }));
+
+app.use(cors({ 
+  origin: 'https://electronic-store-nu.vercel.app',
+  credentials: true 
+}));
 
 app.get("/", (req, res) => {
   res.status(200).json({ status: "ok" });
