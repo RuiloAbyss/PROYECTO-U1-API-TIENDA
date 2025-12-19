@@ -1,5 +1,6 @@
 // services/cartService.js
-const API_URL = 'https://electronic-store-nu.vercel.app/api';
+import API_BASE_URL from '../pages/config';
+const API_URL = API_BASE_URL + '/api';
 
 const getAuthHeaders = () => {
     const token = localStorage.getItem('token');

@@ -10,9 +10,9 @@ const app = express();
 
 app.use(express.json());
 
-app.use(cors({ 
-  origin: 'https://electronic-store-nu.vercel.app',
-  credentials: true 
+app.use(cors({
+  origin: process.env.ALLOWED_HOSTS,
+  credentials: true
 }));
 
 app.get("/", (req, res) => {
@@ -24,6 +24,7 @@ app.use("/api/shoppingcart", shoppingCartRoutes);
 app.use("/api/auth", authRoutes);
 
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import API_BASE_URL from '../config';
 
 const ProductDetail = () => {
     const { productId } = useParams();
@@ -16,7 +17,7 @@ const ProductDetail = () => {
                 const headers = { 'Content-Type': 'application/json' };
                 if (token) headers['Authorization'] = `Bearer ${token}`;
 
-                const response = await fetch(`https://electronic-store-ruiloop.vercel.app/api/product/${productId}`, {
+                const response = await fetch(`${API_BASE_URL}/api/product/${productId}`, {
                     method: 'GET',
                     headers: headers
                 });
@@ -49,7 +50,7 @@ const ProductDetail = () => {
         }
 
         try {
-            const response = await fetch('https://electronic-store-ruiloop.vercel.app/api/shoppingcart/items', {
+            const response = await fetch(API_BASE_URL + '/api/shoppingcart/items', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

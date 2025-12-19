@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import API_BASE_URL from '../config';
 
 const AdminUsers = () => {
     const navigate = useNavigate();
@@ -17,7 +18,7 @@ const AdminUsers = () => {
             const token = localStorage.getItem('token');
             if (!token) return navigate('/login');
 
-            const response = await fetch('https://electronic-store-ruiloop.vercel.app/api/auth/users', {
+            const response = await fetch(API_BASE_URL + '/api/auth/users', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
@@ -36,7 +37,7 @@ const AdminUsers = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`https://electronic-store-ruiloop.vercel.app/api/auth/users/${userId}`, {
+            const response = await fetch(`${API_BASE_URL}/api/auth/users/${userId}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -59,7 +60,7 @@ const AdminUsers = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`https://electronic-store-ruiloop.vercel.app/api/auth/users/${userId}/role`, {
+            const response = await fetch(`${API_BASE_URL}/api/auth/users/${userId}/role`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,

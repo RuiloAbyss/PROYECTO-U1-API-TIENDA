@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { cartService } from '../../services/cartService';
+import API_BASE_URL from '../config';
 
 const Cart = () => {
     const navigate = useNavigate();
@@ -22,7 +23,7 @@ const Cart = () => {
                 return;
             }
 
-            const response = await fetch('https://electronic-store-ruiloop.vercel.app/api/shoppingcart/', {
+            const response = await fetch(API_BASE_URL + '/api/shoppingcart/', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -101,7 +102,7 @@ const Cart = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('https://electronic-store-ruiloop.vercel.app/api/shoppingcart/', {
+            const response = await fetch(API_BASE_URL + '/api/shoppingcart/', {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`

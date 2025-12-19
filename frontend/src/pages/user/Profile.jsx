@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import API_BASE_URL from '../config';
 
 const Profile = () => {
     const navigate = useNavigate();
@@ -26,7 +27,7 @@ const Profile = () => {
                 return;
             }
 
-            const response = await fetch('https://electronic-store-ruiloop.vercel.app/api/auth/me', {
+            const response = await fetch(API_BASE_URL + '/api/auth/me', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import API_BASE_URL from '../config';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -12,7 +13,7 @@ const Login = () => {
     const [notification, setNotification] = useState(null);
 
     // AJUSTA ESTO A TU PUERTO DE BACKEND
-    const API_URL = 'https://electronic-store-ruiloop.vercel.app/api/auth';
+    const API_URL = API_BASE_URL + '/api/auth';
 
     const handleSubmit = async (e) => {
         e.preventDefault();

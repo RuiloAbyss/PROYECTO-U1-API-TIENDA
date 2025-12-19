@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import API_BASE_URL from '../config';
 
 const Home = () => {
     const navigate = useNavigate();
@@ -23,7 +24,7 @@ const Home = () => {
 
                 // Aquí obtenemos TODOS los productos y filtramos en el cliente (frontend)
                 // Podríamos pasar el filtro a la API si el backend lo soportara
-                const response = await fetch('https://electronic-store-ruiloop.vercel.app/api/product/', {
+                const response = await fetch(API_BASE_URL + '/api/product/', {
                     method: 'GET',
                     headers: headers
                 });
@@ -59,7 +60,7 @@ const Home = () => {
         }
 
         try {
-            const response = await fetch('https://electronic-store-ruiloop.vercel.app/api/shoppingcart/items', {
+            const response = await fetch(API_BASE_URL + '/api/shoppingcart/items', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
